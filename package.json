@@ -1,0 +1,19 @@
+{
+  "name": "nov_proj",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/miao17game/NOV_PROJ.git",
+  "author": "bigmogician <bigmogician@outlook.com>",
+  "license": "Apache License 2.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "start": "cd server && yarn start",
+    "dev": "cd client && yarn start"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
