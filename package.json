@@ -11,7 +11,7 @@
     "server"
   ],
   "scripts": {
-    "start": "cd server && yarn start",
+    "start": "cd server && yarn start:dev",
     "dev": "cd client && yarn start"
   },
   "dependencies": {},
