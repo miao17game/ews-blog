@@ -1,0 +1,64 @@
+<style>
+  .header {
+    background: #fff;
+    padding: 0;
+  }
+
+  .inner-content {
+    margin: 16px 0;
+    padding: 24px;
+    background: #fff;
+    min-height: 360px;
+  }
+
+  .container {
+    height: 100vh;
+  }
+
+  .logo {
+    height: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 16px;
+  }
+
+  .trigger {
+    margin-left: 16px;
+    font-size: 20px;
+    cursor: pointer;
+  }
+</style>
+<nz-layout>
+  <nz-sider class="container" nzCollapsible [(nzCollapsed)]="isCollapsed" [nzTrigger]="null">
+    <div class="logo"></div>
+    <ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed">
+      <li
+        *ngFor="let group of menus"
+        nz-submenu
+        [(nzOpen)]="group.selected"
+        [nzTitle]="group.name"
+        [nzIcon]="group.icon"
+      >
+        <ul>
+          <li
+            *ngFor="let item of group.items"
+            nz-menu-item
+            [(nzSelected)]="item.selected"
+            [nzMatchRouter]="true"
+            [nzMatchRouterExact]="true"
+            [routerLink]="item.link"
+          >
+            {{ item.name }}
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </nz-sider>
+  <nz-layout>
+    <nz-header class="header">
+      <i class="trigger" nz-icon [nzType]="menuType" (click)="onMenuClock($event)"></i>
+    </nz-header>
+    <nz-content class="inner-content">
+      <ng-content></ng-content>
+    </nz-content>
+  </nz-layout>
+</nz-layout>
