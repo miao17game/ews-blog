@@ -1,0 +1,11 @@
+{
+  "portal": {
+    "url": "http://localhost:4200/portal"
+  },
+  "site": {
+    "url": "http://localhost:4200/site"
+  },
+  "api": {
+    "url": "http://localhost:4200/api"
+  }
+}

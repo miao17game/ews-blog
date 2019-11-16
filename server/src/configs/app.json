@@ -1,0 +1,11 @@
+{
+  "portal": {
+    "url": "/portal"
+  },
+  "site": {
+    "url": "/site"
+  },
+  "api": {
+    "url": "/api"
+  }
+}
