@@ -12,7 +12,10 @@
   ],
   "scripts": {
     "start": "cd server && yarn start:dev",
-    "dev": "cd client && yarn start"
+    "dev": "cd client && yarn start",
+    "build:server": "cd server && yarn build",
+    "build:client": "cd client && yarn build",
+    "build": "yarn build:client && yarn build:server"
   },
   "dependencies": {},
   "devDependencies": {}
