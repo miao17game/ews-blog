@@ -1,9 +1,22 @@
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app/app.module";
+type IEnv = "prod" | "dev";
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.setGlobalPrefix("api").listen(3000);
+async function start() {
+  const ENV: IEnv = process.env.NODE_ENV === "production" ? "prod" : "dev";
+  const configs = getConfigs(ENV);
+  if (ENV === "prod") {
+    const { bootstrap } = await import("./app/bootstrap.prod");
+    bootstrap(configs);
+  } else {
+    const { bootstrap } = await import("./app/bootstrap.dev");
+    bootstrap(configs);
+  }
 }
 
-bootstrap();
+function getConfigs(env: IEnv) {
+  if (env === "prod") {
+    return require("./configs/config").configs;
+  }
+  return require("./configs/config.dev").configs;
+}
+
+start();
