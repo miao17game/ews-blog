@@ -7,6 +7,7 @@ import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { FormsModule } from "@angular/forms";
 import { NZ_I18N, en_US } from "ng-zorro-antd";
 import { CoreService } from "../services/core.service";
+import { HttpService } from "../services/http.service";
 import { CommonsModule } from "../shared/commons.module";
 import { RoutesModule } from "../shared/routes.module";
 import { AppComponent } from "./app.component";
@@ -24,7 +25,7 @@ registerLocaleData(LOCALES_EN);
     CommonsModule,
     RoutesModule,
   ],
-  providers: [{ provide: NZ_I18N, useValue: en_US }, CoreService],
+  providers: [{ provide: NZ_I18N, useValue: en_US }, CoreService, HttpService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
