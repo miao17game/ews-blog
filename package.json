@@ -17,7 +17,7 @@
     "build:server": "cd server && yarn build",
     "build:client": "cd client && yarn build",
     "build": "yarn build:client && yarn build:server",
-    "postbuild": "rimraf server/build && npx copy client/dist/client/** server/build"
+    "postbuild": "rimraf server/build && npx copy client/dist/client/**/*.* server/build"
   },
   "dependencies": {},
   "devDependencies": {}

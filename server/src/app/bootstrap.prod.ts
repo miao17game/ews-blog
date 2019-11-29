@@ -7,7 +7,6 @@ import { IConfigs } from "../configs/config";
 import { ConfigService } from "../services/config.service";
 
 const buildPath = path.join(__dirname, "..", "..", "build");
-const assetsPath = path.join(__dirname, "..", "assets");
 
 export async function bootstrap(configs: IConfigs) {
   // console.log("load configs [app.json] -->");
