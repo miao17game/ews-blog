@@ -1,6 +1,6 @@
-import { IConfigs } from "./config";
+import { merge, configs as defaultConfigs } from "./config";
 
-export const configs: IConfigs = {
+export const configs = merge(defaultConfigs, {
   portal: {
     uri: "http://localhost:4200/portal",
     type: "redirect",
@@ -11,6 +11,5 @@ export const configs: IConfigs = {
   },
   api: {
     uri: "http://localhost:4200/api",
-    type: "redirect",
   },
-};
+});
