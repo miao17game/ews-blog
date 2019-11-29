@@ -10,8 +10,8 @@ const buildPath = path.join(__dirname, "..", "..", "build");
 const assetsPath = path.join(__dirname, "..", "assets");
 
 export async function bootstrap(configs: IConfigs) {
-  console.log("load configs [app.json] -->");
-  console.log(configs);
+  // console.log("load configs [app.json] -->");
+  // console.log(configs);
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.get(ConfigService).setConfig(configs);
   app.useStaticAssets(buildPath);
