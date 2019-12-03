@@ -8,7 +8,7 @@
     "prebuild": "rimraf dist",
     "build": "nest build && yarn copy:prod",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "cross-env NODE_ENV=dev nest start",
+    "start": "yarn copy:dev && cross-env NODE_ENV=dev nest start",
     "start:dev": "yarn copy:dev && cross-env NODE_ENV=dev nest start --watch",
     "start:debug": "yarn copy:dev && cross-env NODE_ENV=dev nest start --debug --watch",
     "start:prod": "cross-env NODE_ENV=production node dist/main",
@@ -20,10 +20,12 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "copy:assets": "npx copy src/assets/**/*.* dist/assets",
     "copy:configs": "npx copy src/configs/**/*.json dist/configs",
+    "copy:tsconfig": "npx copy tsconfig.jsx.json dist",
     "copy:dev": "yarn prebuild && yarn copy:prod",
-    "copy:prod": "yarn copy:assets && yarn copy:configs"
+    "copy:prod": "yarn copy:assets && yarn copy:configs && yarn copy:tsconfig"
   },
   "dependencies": {
+    "@amoebajs/builder": "0.0.1-beta.1575373999744",
     "@nestjs/common": "^6.7.2",
     "@nestjs/core": "^6.7.2",
     "@nestjs/platform-express": "^6.7.2",
