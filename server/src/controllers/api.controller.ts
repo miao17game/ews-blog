@@ -8,7 +8,8 @@ export class ApiController {
 
   @Post("page")
   createtask(@Body() data: any) {
-    console.log("create task ==> " + JSON.stringify(data || {}));
+    console.log("create task ==> ");
+    console.log(data);
     const id = this.compiler.createtask(data);
     return { result: id };
   }
@@ -17,6 +18,7 @@ export class ApiController {
   gettask(@Query("id") id: string) {
     console.log("query task ==> " + id);
     const result = this.compiler.queryTask(id);
+    console.log(result);
     return { result };
   }
 }
