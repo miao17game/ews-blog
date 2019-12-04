@@ -6,19 +6,35 @@ import { CompileService } from "../services/compile.service";
 export class ApiController {
   constructor(private readonly appService: ConfigService, private readonly compiler: CompileService) {}
 
-  @Post("page")
+  @Post("task")
   createtask(@Body() data: any) {
     console.log("create task ==> ");
     console.log(data);
-    const id = this.compiler.createtask(data);
-    return { result: id };
+    const { name, ...others } = data;
+    const id = this.compiler.createtask(name, others);
+    return {
+      code: 0,
+      data: {
+        id,
+        configs: data,
+      },
+    };
   }
 
-  @Get("page")
+  @Get("task")
   gettask(@Query("id") id: string) {
     console.log("query task ==> " + id);
     const result = this.compiler.queryTask(id);
     console.log(result);
-    return { result };
+    if (!result) {
+      return {
+        code: 404,
+        data: {
+          id: -1,
+          errorMsg: `task[${id}] not found`,
+        },
+      };
+    }
+    return { code: 0, data: result };
   }
 }

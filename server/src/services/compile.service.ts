@@ -1,10 +1,16 @@
 import * as path from "path";
 import * as fs from "fs-extra";
 import chalk from "chalk";
+import uuid from "uuid/v4";
 import { cloneDeep } from "lodash";
 import { Injectable } from "@nestjs/common";
-import { buildSource, createSource, IPageCreateOptions } from "@amoebajs/builder";
-import uuid from "uuid/v4";
+import {
+  buildSource,
+  createSource,
+  IPageCreateOptions,
+  createProgressPlugin,
+  buildHtmlBundle,
+} from "@amoebajs/builder";
 
 export enum CompileTaskStatus {
   Pending,
@@ -15,30 +21,39 @@ export enum CompileTaskStatus {
 
 export interface ICompileTask {
   id: string;
+  name: string;
   status: CompileTaskStatus;
   configs: IPageCreateOptions;
   errorMsg?: string;
 }
 
+const assestDir = path.resolve(__dirname, "..", "assets");
 const tempDir = path.resolve(__dirname, "..", "temp");
-const tempDistDir = path.resolve(__dirname, "..", "build");
+const tempSrcDir = path.resolve(tempDir, "src");
+const tempOutputDir = path.resolve(tempDir, "build");
+
+const INTERVAL = 1000;
 
 @Injectable()
 export class CompileService {
   private tasks: ICompileTask[] = [];
 
-  private get alldone() {
-    return this.tasks.every(i => i.status === CompileTaskStatus.Done);
+  private get running() {
+    return this.tasks.findIndex(i => i.status === CompileTaskStatus.Running) >= 0;
   }
 
-  public createtask(configs: IPageCreateOptions): string {
+  constructor() {
+    this.autoWatch(INTERVAL);
+  }
+
+  public createtask(name: string, configs: IPageCreateOptions): string {
     const task: ICompileTask = {
       id: uuid().slice(0, 8),
+      name,
       status: CompileTaskStatus.Pending,
       configs,
     };
     this.tasks.push(task);
-    this.startTask();
     return task.id;
   }
 
@@ -50,62 +65,79 @@ export class CompileService {
     return cloneDeep(target);
   }
 
-  private async sleep(time: number) {
-    return new Promise(resolve => setTimeout(resolve, time));
-  }
-
-  private async startTask() {
-    const firstRunning = this.tasks.findIndex(i => i.status === CompileTaskStatus.Running);
-    if (firstRunning >= 0) {
-      await this.sleep(2000);
-      this.startTask();
+  private async findAndStartTask() {
+    if (this.running) {
       return;
     }
     const firstPending = this.tasks.findIndex(i => i.status === CompileTaskStatus.Pending);
+    // no work to do
     if (firstPending < 0) {
-      // quit
       return;
-    } else {
-      const task = this.tasks[firstPending];
-      task.status = CompileTaskStatus.Running;
-      fs.pathExists(tempDir).then(async exist => {
-        if (!exist) {
-          fs.mkdirSync(tempDir);
-        }
-        const stamp = new Date().getTime();
-        try {
-          console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] is now running.`));
-          await createSource(tempDir, "app-component", task.configs);
-          console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] compile successfully.`));
-          await buildSource({
-            template: { title: "测试" },
-            entry: { app: path.join(tempDir, "main.tsx") },
-            output: { path: tempDistDir },
-            showProgress: true,
-            tsconfig: path.resolve(__dirname, "..", "tsconfig.jsx.json"),
-          });
-          task.status = CompileTaskStatus.Done;
-          const cost = (new Date().getTime() - stamp) / 1000;
-          console.log(chalk.green(`[COMPILE-TASK] task[${task.id}] end with status [${task.status}] in ${cost}s`));
-        } catch (error) {
-          console.log(error);
-          task.status = CompileTaskStatus.Failed;
-          try {
-            if (error && error.message) {
-              task.errorMsg = String(error.message);
-            } else {
-              task.errorMsg = JSON.stringify(error);
-            }
-          } catch (error02) {
-            task.errorMsg = String(error02);
-          }
-          const cost = (new Date().getTime() - stamp) / 1000;
-          console.log(chalk.red(`[COMPILE-TASK] task[${task.id}] end with status [${task.status}]  in ${cost}s`));
-          console.log(chalk.yellow(`[COMPILE-TASK] task[${task.id}] failed.`));
-        } finally {
-          this.sleep(2000).then(() => this.startTask());
-        }
-      });
     }
+    const task = this.tasks[firstPending];
+    task.status = CompileTaskStatus.Running;
+    fs.pathExists(tempSrcDir).then(async exist => {
+      if (!exist) {
+        fs.mkdirSync(tempSrcDir, { recursive: true });
+      }
+      await this.startWork(task);
+    });
+  }
+
+  private async startWork(task: ICompileTask) {
+    const stamp = new Date().getTime();
+    try {
+      console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] is now running.`));
+      await createSource(tempSrcDir, "app-component", task.configs);
+      console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] compile successfully.`));
+      await buildSource({
+        template: { title: "测试" },
+        entry: { app: path.join(tempSrcDir, "main.tsx") },
+        output: { path: tempOutputDir },
+        plugins: [createProgressPlugin()],
+        typescript: {
+          tsconfig: path.resolve(__dirname, "..", "tsconfig.jsx.json"),
+        },
+      });
+      await buildHtmlBundle(path.join(tempOutputDir, "index.html"), [
+        { match: "app.js", path: path.join(tempOutputDir, "app.js") },
+        { match: "vendor.js", path: path.join(tempOutputDir, "vendor.js") },
+      ]);
+      await this.moveHtmlBundle(task.name);
+      task.status = CompileTaskStatus.Done;
+
+      const cost = this.getSecondsCost(stamp);
+      console.log(chalk.green(`[COMPILE-TASK] task[${task.id}] end with status [${task.status}] in ${cost}s`));
+    } catch (error) {
+      console.log(error);
+      try {
+        if (error && error.message) {
+          task.errorMsg = String(error.message);
+        } else {
+          task.errorMsg = JSON.stringify(error);
+        }
+      } catch (error02) {
+        task.errorMsg = String(error02);
+      }
+      task.status = CompileTaskStatus.Failed;
+
+      const cost = this.getSecondsCost(stamp);
+      console.log(chalk.red(`[COMPILE-TASK] task[${task.id}] end with status [${task.status}]  in ${cost}s`));
+      console.log(chalk.yellow(`[COMPILE-TASK] task[${task.id}] failed.`));
+    }
+  }
+
+  private autoWatch(time: number) {
+    setInterval(() => this.findAndStartTask(), time);
+  }
+
+  private getSecondsCost(stamp: number) {
+    return (new Date().getTime() - stamp) / 1000;
+  }
+
+  private async moveHtmlBundle(name: string) {
+    return fs.move(path.join(tempOutputDir, "index.html"), path.join(assestDir, "website", `${name}.html`), {
+      overwrite: true,
+    });
   }
 }
