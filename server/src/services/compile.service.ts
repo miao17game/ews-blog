@@ -27,16 +27,30 @@ export interface ICompileTask {
   errorMsg?: string;
 }
 
-const assestDir = path.resolve(__dirname, "..", "assets");
-const tempDir = path.resolve(__dirname, "..", "temp");
-const tempSrcDir = path.resolve(tempDir, "src");
-const tempOutputDir = path.resolve(tempDir, "build");
+export interface IWebsitePageHash {
+  [name: string]: {
+    latest: string;
+    files: {
+      [key: string]: string;
+    };
+  };
+}
 
+const ASSETS_DIR = path.resolve(__dirname, "..", "assets");
 const INTERVAL = 1000;
+
+function getSrcDir(id: string) {
+  return path.resolve(__dirname, "..", "temp", id, "src");
+}
+
+function getBuildDir(id: string) {
+  return path.resolve(__dirname, "..", "temp", id, "build");
+}
 
 @Injectable()
 export class CompileService {
   private tasks: ICompileTask[] = [];
+  private hash: IWebsitePageHash = {};
 
   private get running() {
     return this.tasks.findIndex(i => i.status === CompileTaskStatus.Running) >= 0;
@@ -46,9 +60,16 @@ export class CompileService {
     this.autoWatch(INTERVAL);
   }
 
+  public getPageTemplate(name: string) {
+    const hash = this.hash[name];
+    return !hash ? null : `website/${name}.${hash}.html`;
+  }
+
   public createtask(name: string, configs: IPageCreateOptions): string {
     const task: ICompileTask = {
-      id: uuid().slice(0, 8),
+      id: uuid()
+        .split("-")
+        .join(""),
       name,
       status: CompileTaskStatus.Pending,
       configs,
@@ -76,35 +97,59 @@ export class CompileService {
     }
     const task = this.tasks[firstPending];
     task.status = CompileTaskStatus.Running;
+    const tempSrcDir = getSrcDir(task.id);
+    const tempBuildDir = getBuildDir(task.id);
     fs.pathExists(tempSrcDir).then(async exist => {
       if (!exist) {
         fs.mkdirSync(tempSrcDir, { recursive: true });
       }
-      await this.startWork(task);
+      await this.startWork(task, tempSrcDir, tempBuildDir);
     });
   }
 
-  private async startWork(task: ICompileTask) {
+  private async startWork(task: ICompileTask, srcDir: string, buildDir: string) {
     const stamp = new Date().getTime();
+    const filehash = (this.hash[task.name] = this.hash[task.name] || { latest: "", files: {} });
     try {
       console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] is now running.`));
-      await createSource(tempSrcDir, "app-component", task.configs);
+      await createSource(srcDir, "app-component", task.configs);
       console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] compile successfully.`));
       await buildSource({
         template: { title: "测试" },
-        entry: { app: path.join(tempSrcDir, "main.tsx") },
-        output: { path: tempOutputDir },
+        entry: { app: path.join(srcDir, "main.tsx") },
+        output: { path: buildDir, filename: "[name].[hash].js" },
         plugins: [createProgressPlugin()],
         typescript: {
           tsconfig: path.resolve(__dirname, "..", "tsconfig.jsx.json"),
         },
       });
-      await buildHtmlBundle(path.join(tempOutputDir, "index.html"), [
-        { match: "app.js", path: path.join(tempOutputDir, "app.js") },
-        { match: "vendor.js", path: path.join(tempOutputDir, "vendor.js") },
-      ]);
-      await this.moveHtmlBundle(task.name);
+      await buildHtmlBundle({
+        path: path.join(buildDir, "index.html"),
+        scripts: [
+          { match: /app\.[a-z0-9]+\.js/, path: n => path.join(buildDir, n) },
+          { match: /vendor\.[a-z0-9]+\.js/, path: n => path.join(buildDir, n) },
+        ],
+        checkUnchange: (match, value) => {
+          if (filehash.files[match as string] === value) {
+            return true;
+          }
+          filehash.files[match as string] = value;
+          console.log(`[COMPILE-TASK] task[${task.id}] find a change changed --> [${value}]`);
+          return false;
+        },
+        shouldBundle: ps => {
+          if (ps.length > 0) {
+            return true;
+          }
+          console.log(`[COMPILE-TASK] task[${task.id}] find no file changed.`);
+          return false;
+        },
+      });
+      filehash.latest = task.id;
+      await this.moveHtmlBundle(task.name, task.id, buildDir);
       task.status = CompileTaskStatus.Done;
+
+      console.log(JSON.stringify(filehash, null, "  "));
 
       const cost = this.getSecondsCost(stamp);
       console.log(chalk.green(`[COMPILE-TASK] task[${task.id}] end with status [${task.status}] in ${cost}s`));
@@ -135,8 +180,8 @@ export class CompileService {
     return (new Date().getTime() - stamp) / 1000;
   }
 
-  private async moveHtmlBundle(name: string) {
-    return fs.move(path.join(tempOutputDir, "index.html"), path.join(assestDir, "website", `${name}.html`), {
+  private async moveHtmlBundle(name: string, id: string, buildDir: string) {
+    return fs.copy(path.join(buildDir, "index.html"), path.join(ASSETS_DIR, "website", `${name}.${id}.html`), {
       overwrite: true,
     });
   }
