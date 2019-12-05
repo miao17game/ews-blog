@@ -4,13 +4,7 @@ import chalk from "chalk";
 import uuid from "uuid/v4";
 import { cloneDeep } from "lodash";
 import { Injectable } from "@nestjs/common";
-import {
-  buildSource,
-  createSource,
-  IPageCreateOptions,
-  createProgressPlugin,
-  buildHtmlBundle,
-} from "@amoebajs/builder";
+import { Factory, IPageCreateOptions } from "@amoebajs/builder";
 
 export enum CompileTaskStatus {
   Pending,
@@ -49,8 +43,13 @@ function getBuildDir(id: string) {
 
 @Injectable()
 export class CompileService {
+  private factory = new Factory();
   private tasks: ICompileTask[] = [];
   private hash: IWebsitePageHash = {};
+
+  private get builder() {
+    return this.factory.builder;
+  }
 
   private get running() {
     return this.tasks.findIndex(i => i.status === CompileTaskStatus.Running) >= 0;
@@ -62,7 +61,7 @@ export class CompileService {
 
   public getPageTemplate(name: string) {
     const hash = this.hash[name];
-    return !hash ? null : `website/${name}.${hash}.html`;
+    return !hash ? null : `website/${name}.${hash.latest}.html`;
   }
 
   public createtask(name: string, configs: IPageCreateOptions): string {
@@ -112,19 +111,20 @@ export class CompileService {
     const filehash = (this.hash[task.name] = this.hash[task.name] || { latest: "", files: {} });
     try {
       console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] is now running.`));
-      await createSource(srcDir, "app-component", task.configs);
+      await this.builder.createSource(srcDir, "app-component", task.configs);
       console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] compile successfully.`));
-      await buildSource({
+      await this.builder.buildSource({
         template: { title: "测试" },
         entry: { app: path.join(srcDir, "main.tsx") },
         output: { path: buildDir, filename: "[name].[hash].js" },
-        plugins: [createProgressPlugin()],
+        plugins: [this.builder.webpackPlugins.createProgressPlugin()],
         typescript: {
           tsconfig: path.resolve(__dirname, "..", "tsconfig.jsx.json"),
         },
       });
-      await buildHtmlBundle({
+      await this.builder.htmlBundle.build({
         path: path.join(buildDir, "index.html"),
+        outPath: path.join(buildDir, "index.bundle.html"),
         scripts: [
           { match: /app\.[a-z0-9]+\.js/, path: n => path.join(buildDir, n) },
           { match: /vendor\.[a-z0-9]+\.js/, path: n => path.join(buildDir, n) },
@@ -181,7 +181,7 @@ export class CompileService {
   }
 
   private async moveHtmlBundle(name: string, id: string, buildDir: string) {
-    return fs.copy(path.join(buildDir, "index.html"), path.join(ASSETS_DIR, "website", `${name}.${id}.html`), {
+    return fs.copy(path.join(buildDir, "index.bundle.html"), path.join(ASSETS_DIR, "website", `${name}.${id}.html`), {
       overwrite: true,
     });
   }
