@@ -4,10 +4,12 @@ import { ApiController } from "../controllers/api.controller";
 import { SiteController } from "../controllers/site.controller";
 import { PortalController } from "../controllers/portal.controller";
 import { CompileService } from "../services/compile.service";
+import { AuthService, FakeAuthService } from "../services/auth.service";
+import { RolesGuard } from "../guards/roles.guard";
 
 @Module({
   imports: [],
   controllers: [ApiController, SiteController, PortalController],
-  providers: [ConfigService, CompileService],
+  providers: [ConfigService, CompileService, RolesGuard, { provide: AuthService, useClass: FakeAuthService }],
 })
 export class AppModule {}
