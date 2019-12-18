@@ -2,9 +2,9 @@ import * as path from "path";
 import * as nunjucks from "nunjucks";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
+import { ConfigService } from "@global/services/config.service";
 import { MainModule } from "./main.module";
 import { IConfigs } from "./configs/config";
-import { ConfigService } from "./app/services/config.service";
 
 // tslint:disable: no-unused-expression
 

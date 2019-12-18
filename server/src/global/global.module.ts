@@ -1,13 +1,21 @@
 import { Module, Global } from "@nestjs/common";
 import { AuthService } from "@global/services/auth.service";
-import { FakeAuthService } from "@app/services/auth.service";
-import { UserService } from "./services/user.service";
+import { FakeAuthService } from "@app/services/fake-auth.service";
+import { UserService } from "@global//services/user.service";
+import { CompileService } from "@global//services/compile.service";
+import { CoreCompiler } from "@app/services/core-compile.service";
+import { ConfigService } from "@global//services/config.service";
 
 @Global()
 @Module({
   imports: [],
   controllers: [],
-  providers: [UserService, { provide: AuthService, useClass: FakeAuthService }],
-  exports: [AuthService, UserService],
+  providers: [
+    ConfigService,
+    UserService,
+    { provide: AuthService, useClass: FakeAuthService },
+    { provide: CompileService, useClass: CoreCompiler },
+  ],
+  exports: [ConfigService, AuthService, UserService, CompileService],
 })
 export class GlobalModule {}

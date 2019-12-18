@@ -5,6 +5,7 @@ import uuid from "uuid/v4";
 import { cloneDeep } from "lodash";
 import { Injectable } from "@nestjs/common";
 import { Factory, IPageCreateOptions } from "@amoebajs/builder";
+import { CompileService } from "@global/services/compile.service";
 
 // tslint:disable: object-literal-key-quotes
 
@@ -52,7 +53,7 @@ function getBuildDir(id: string) {
 }
 
 @Injectable()
-export class CompileService {
+export class CoreCompiler implements CompileService<ICompileTask> {
   private factory = new Factory();
   private tasks: ICompileTask[] = [];
   private hash: IWebsitePageHash = {};
