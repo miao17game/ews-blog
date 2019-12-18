@@ -15,7 +15,10 @@
     "skipLibCheck": true,
     "paths": {
       "@global/*": ["./src/global/*"],
-      "@app/*": ["./src/app/*"]
+      "@app/*": ["./src/app/*"],
+      "@assets/*": ["./src/assets/*"],
+      "@configs/*": ["./src/configs/*"],
+      "@utils/*": ["./src/utils/*"]
     }
   },
   "exclude": ["node_modules", "dist"]
