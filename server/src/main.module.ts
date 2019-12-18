@@ -3,7 +3,7 @@ import { AppModule } from "./app/app.module";
 import { GlobalModule } from "@global/global.module";
 
 @Module({
-  imports: [GlobalModule, AppModule],
+  imports: [GlobalModule],
   controllers: [],
   providers: [],
 })
