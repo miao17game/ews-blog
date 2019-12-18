@@ -10,7 +10,6 @@ export class RolesGuard implements CanActivate {
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
     const roles = this.reflector.get<string[]>(ROLES_GUARD__ROLES, context.getHandler());
-    console.log(roles);
     if (!roles) {
       return true;
     }
