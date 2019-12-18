@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Scope } from "@nestjs/common";
 
 // tslint:disable: variable-name
 // tslint:disable: no-string-literal
@@ -48,7 +48,7 @@ export function getUserDelegate<U extends UserService<any>>(user: U) {
   return delegate;
 }
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class UserService<
   I extends string | number = number,
   R extends any = string,
