@@ -1,6 +1,6 @@
 import { Module, Global } from "@nestjs/common";
-import { AuthService } from "./services/auth.service";
-import { FakeAuthService } from "../app/services/auth.service";
+import { AuthService } from "@global/services/auth.service";
+import { FakeAuthService } from "@app/services/auth.service";
 
 @Global()
 @Module({
