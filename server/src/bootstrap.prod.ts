@@ -2,9 +2,9 @@ import * as path from "path";
 import * as nunjucks from "nunjucks";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
-import { AppModule } from "./app.module";
-import { IConfigs } from "../configs/config";
-import { ConfigService } from "../services/config.service";
+import { AppModule } from "./app/app.module";
+import { IConfigs } from "./configs/config";
+import { ConfigService } from "./app/services/config.service";
 
 // tslint:disable: no-unused-expression
 
@@ -17,6 +17,7 @@ type OnInitHook<T> = (app: T) => void | Promise<void>;
 export async function bootstrap(configs: IConfigs, onInit: OnInitHook<NestExpressApplication> = noopPromise) {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.get(ConfigService).setConfig(configs);
+  app.useStaticAssets(BUILD_ROOT);
   const environment = nunjucks.configure([BUILD_ROOT, ASSETS_ROOT], {
     autoescape: true,
     noCache: true,

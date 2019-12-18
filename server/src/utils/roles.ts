@@ -1,5 +1,5 @@
 import { SetMetadata, UseGuards } from "@nestjs/common";
-import { RolesGuard } from "../guards/roles.guard";
+import { RolesGuard } from "../app/guards/roles.guard";
 
 export const ROLES_GUARD__ROLES = "RolesGuard::roles";
 export const ROLES_GUARD__CLASS_ROLES = "RolesGuard::classRoles";

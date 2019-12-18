@@ -2,7 +2,7 @@
 // import * as path from "path";
 import * as nunjucks from "nunjucks";
 import { bootstrap as base, BUILD_ROOT, ASSETS_ROOT } from "./bootstrap.prod";
-import { IConfigs } from "../configs/config";
+import { IConfigs } from "./configs/config";
 
 // const serverRoot = path.resolve(__dirname, "..", "..", "src");
 // const assetsRoot = path.resolve(serverRoot, "assets", "**", "*");

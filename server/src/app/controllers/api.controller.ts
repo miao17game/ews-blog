@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Get, Query } from "@nestjs/common";
 import { ConfigService } from "../services/config.service";
 import { CompileService } from "../services/compile.service";
-import { UseRolesAuthentication, SetRoles } from "../utils/roles";
+import { UseRolesAuthentication, SetRoles } from "../../utils/roles";
 
 @Controller("api")
 @UseRolesAuthentication({ roles: ["admin"] })

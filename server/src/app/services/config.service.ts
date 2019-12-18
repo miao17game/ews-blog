@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { cloneDeep } from "lodash";
-import { IConfigs } from "../configs/config";
+import { IConfigs } from "../../configs/config";
 
 @Injectable()
 export class ConfigService {
