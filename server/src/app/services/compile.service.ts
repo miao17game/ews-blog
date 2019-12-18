@@ -6,6 +6,8 @@ import { cloneDeep } from "lodash";
 import { Injectable } from "@nestjs/common";
 import { Factory, IPageCreateOptions } from "@amoebajs/builder";
 
+// tslint:disable: object-literal-key-quotes
+
 export enum CompileTaskStatus {
   Pending,
   Running,
@@ -30,15 +32,23 @@ export interface IWebsitePageHash {
   };
 }
 
-const ASSETS_DIR = path.resolve(__dirname, "..", "assets");
+const ASSETS_DIR = path.resolve(__dirname, "..", "..", "assets");
 const INTERVAL = 1000;
 
+function getNpmSandbox() {
+  return path.resolve(__dirname, "..", "..", "temp");
+}
+
+function getTsconfigFile() {
+  return path.resolve(__dirname, "..", "..", "tsconfig.jsx.json");
+}
+
 function getSrcDir(id: string) {
-  return path.resolve(__dirname, "..", "temp", id, "src");
+  return path.resolve(getNpmSandbox(), id, "src");
 }
 
 function getBuildDir(id: string) {
-  return path.resolve(__dirname, "..", "temp", id, "build");
+  return path.resolve(getNpmSandbox(), id, "build");
 }
 
 @Injectable()
@@ -66,9 +76,7 @@ export class CompileService {
 
   public createtask(name: string, configs: IPageCreateOptions): string {
     const task: ICompileTask = {
-      id: uuid()
-        .split("-")
-        .join(""),
+      id: new Date().getTime() + "-" + uuid().slice(0, 6),
       name,
       status: CompileTaskStatus.Pending,
       configs,
@@ -118,10 +126,17 @@ export class CompileService {
         entry: { app: path.join(srcDir, "main.tsx") },
         output: { path: buildDir, filename: "[name].[hash].js" },
         plugins: [this.builder.webpackPlugins.createProgressPlugin()],
-        typescript: {
-          tsconfig: path.resolve(__dirname, "..", "tsconfig.jsx.json"),
+        typescript: { tsconfig: getTsconfigFile() },
+        sandbox: {
+          rootPath: getNpmSandbox(),
+          dependencies: {
+            react: "^16.12.0",
+            zent: "^7.1.0",
+            "react-dom": "^16.12.0",
+          },
         },
       });
+      let shouldMoveBundle = true;
       await this.builder.htmlBundle.build({
         path: path.join(buildDir, "index.html"),
         outPath: path.join(buildDir, "index.bundle.html"),
@@ -142,11 +157,13 @@ export class CompileService {
             return true;
           }
           console.log(`[COMPILE-TASK] task[${task.id}] find no file changed.`);
-          return false;
+          return (shouldMoveBundle = false);
         },
       });
       filehash.latest = task.id;
-      await this.moveHtmlBundle(task.name, task.id, buildDir);
+      if (shouldMoveBundle) {
+        await this.moveHtmlBundle(task.name, task.id, buildDir);
+      }
       task.status = CompileTaskStatus.Done;
 
       console.log(JSON.stringify(filehash, null, "  "));
