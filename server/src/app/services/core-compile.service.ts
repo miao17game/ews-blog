@@ -94,7 +94,7 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     return cloneDeep(target);
   }
 
-  private async findAndStartTask() {
+  protected async findAndStartTask() {
     if (this.running) {
       return;
     }
@@ -115,7 +115,7 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     });
   }
 
-  private async startWork(task: ICompileTask, srcDir: string, buildDir: string) {
+  protected async startWork(task: ICompileTask, srcDir: string, buildDir: string) {
     const stamp = new Date().getTime();
     const filehash = (this.hash[task.name] = this.hash[task.name] || { latest: "", files: {} });
     try {
@@ -190,15 +190,15 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     }
   }
 
-  private autoWatch(time: number) {
+  protected autoWatch(time: number) {
     setInterval(() => this.findAndStartTask(), time);
   }
 
-  private getSecondsCost(stamp: number) {
+  protected getSecondsCost(stamp: number) {
     return (new Date().getTime() - stamp) / 1000;
   }
 
-  private async moveHtmlBundle(name: string, id: string, buildDir: string) {
+  protected async moveHtmlBundle(name: string, id: string, buildDir: string) {
     return fs.copy(path.join(buildDir, "index.bundle.html"), path.join(ASSETS_DIR, "website", `${name}.${id}.html`), {
       overwrite: true,
     });
