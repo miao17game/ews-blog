@@ -12,7 +12,11 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@global/*": ["./src/global/*"],
+      "@app/*": ["./src/app/*"]
+    }
   },
   "exclude": ["node_modules", "dist"]
 }

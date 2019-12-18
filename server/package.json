@@ -11,7 +11,7 @@
     "start": "yarn copy:dev && cross-env NODE_ENV=dev nest start",
     "start:dev": "yarn copy:dev && cross-env NODE_ENV=dev nest start --watch",
     "start:debug": "yarn copy:dev && cross-env NODE_ENV=dev nest start --debug --watch",
-    "start:prod": "cross-env NODE_ENV=production node dist/main",
+    "start:prod": "cross-env NODE_ENV=production node -r ./scripts/tsconfig-paths dist/main",
     "lint": "tslint -p tsconfig.json -c tslint.json",
     "test": "jest",
     "test:watch": "jest --watch",

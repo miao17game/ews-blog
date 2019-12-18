@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
 import { AppModule } from "./app/app.module";
-import { AuthService, FakeAuthService } from "./app/services/auth.service";
+import { GlobalModule } from "@global/global.module";
 
 @Module({
-  imports: [AppModule],
+  imports: [GlobalModule, AppModule],
   controllers: [],
-  providers: [{ provide: AuthService, useClass: FakeAuthService }],
+  providers: [],
 })
 export class MainModule {}
