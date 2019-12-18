@@ -13,7 +13,9 @@
     "interface-name": [false],
     "arrow-parens": false,
     "object-literal-sort-keys": false,
-    "no-console": false
+    "no-console": false,
+    "no-angle-bracket-type-assertion": false,
+    "whitespace": false
   },
   "rulesDirectory": []
 }

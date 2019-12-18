@@ -1,9 +1,8 @@
 import { Module } from "@nestjs/common";
-import { AppModule } from "./app/app.module";
-import { GlobalModule } from "@global/global.module";
+import { AppModule } from "@app/app.module";
 
 @Module({
-  imports: [GlobalModule],
+  imports: [AppModule],
   controllers: [],
   providers: [],
 })
