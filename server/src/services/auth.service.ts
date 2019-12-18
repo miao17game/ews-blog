@@ -10,6 +10,6 @@ export abstract class AuthService {
 @Injectable()
 export class FakeAuthService extends AuthService {
   public hasAccess(roles: string[]): boolean | Promise<boolean> | Observable<boolean> {
-    return false;
+    return true;
   }
 }
