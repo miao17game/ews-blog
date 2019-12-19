@@ -14,7 +14,7 @@ export class ForbiddenExceptionFilter implements ExceptionFilter {
     const status = exception.getStatus();
 
     if (this.auth.handleWhenUnauthentication) {
-      this.auth.handleWhenUnauthentication();
+      this.auth.handleWhenUnauthentication(ctx);
       return;
     }
 
