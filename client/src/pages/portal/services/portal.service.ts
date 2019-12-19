@@ -16,7 +16,7 @@ export interface IMenuGroup {
 
 @Injectable()
 export class PortalService {
-  private isCollapsed = false;
+  public isCollapsed = false;
 
   public menulist: IMenuGroup[] = [
     {
@@ -39,10 +39,6 @@ export class PortalService {
   ];
 
   public userInfos: any = { logined: false, name: "" };
-
-  public get menuCollapsed() {
-    return this.isCollapsed;
-  }
 
   constructor(private readonly http: HttpService) {}
 

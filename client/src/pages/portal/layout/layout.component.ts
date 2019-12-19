@@ -11,7 +11,11 @@ export class PortalLayoutComponent implements OnInit, OnDestroy {
   private routeSubp!: Subscription;
 
   public get isCollapsed() {
-    return this.portal.menuCollapsed;
+    return this.portal.isCollapsed;
+  }
+
+  public set isCollapsed(value: boolean) {
+    this.portal.isCollapsed = value;
   }
 
   public get menus() {
@@ -43,7 +47,7 @@ export class PortalLayoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  public onMenuClock() {
+  public onMenuClock(event: any) {
     this.portal.toggleMenuCollapsed();
   }
 }
