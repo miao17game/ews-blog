@@ -39,8 +39,8 @@
             "production": {
               "fileReplacements": [
                 {
-                  "replace": "src/envs/index.ts",
-                  "with": "src/envs/index.prod.ts"
+                  "replace": "src/env/index.ts",
+                  "with": "src/env/index.prod.ts"
                 }
               ],
               "optimization": true,
