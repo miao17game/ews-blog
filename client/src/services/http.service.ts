@@ -23,18 +23,22 @@ export class HttpService {
   constructor(private client: HttpClient) {}
 
   public get(url: string, queries: { [prop: string]: any } = {}, options: IHttpOptions = {}) {
-    return this.client.get(`${ENV.server.api}/${url}${processQueries(queries)}`, options).toPromise();
+    return this.client
+      .get(`${ENV.server.api}/${url}${processQueries(queries)}`, { withCredentials: true, ...options })
+      .toPromise();
   }
 
   public post(url: string, body: { [prop: string]: any } = {}, options: IHttpOptions = {}) {
-    return this.client.post(`${ENV.server.api}/${url}`, body, options).toPromise();
+    return this.client.post(`${ENV.server.api}/${url}`, body, { withCredentials: true, ...options }).toPromise();
   }
 
   public put(url: string, body: { [prop: string]: any } = {}, options: IHttpOptions = {}) {
-    return this.client.put(`${ENV.server.api}/${url}`, body, options).toPromise();
+    return this.client.put(`${ENV.server.api}/${url}`, body, { withCredentials: true, ...options }).toPromise();
   }
 
   public delete(url: string, queries: { [prop: string]: any } = {}, options: IHttpOptions = {}) {
-    return this.client.delete(`${ENV.server.api}/${url}${processQueries(queries)}`, options).toPromise();
+    return this.client
+      .delete(`${ENV.server.api}/${url}${processQueries(queries)}`, { withCredentials: true, ...options })
+      .toPromise();
   }
 }
