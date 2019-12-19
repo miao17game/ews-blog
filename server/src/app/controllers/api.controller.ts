@@ -1,5 +1,4 @@
 import { Controller, Post, Body, Get, Query } from "@nestjs/common";
-import { ConfigService } from "@global/services/config.service";
 import { CompileService } from "@global/services/compile.service";
 import { UseRolesAuthentication, SetRoles } from "@utils/roles";
 import { ICompileTask } from "../services/core-compile.service";
@@ -7,11 +6,20 @@ import { ICompileTask } from "../services/core-compile.service";
 @Controller("api")
 @UseRolesAuthentication({ roles: ["admin"] })
 export class ApiController {
-  constructor(private readonly appService: ConfigService, private readonly compiler: CompileService<ICompileTask>) {}
+  constructor(private readonly compiler: CompileService<ICompileTask>) {}
+
+  @Get("templates")
+  @SetRoles("admin")
+  public queryTemplateGroup() {
+    return {
+      code: 0,
+      data: this.compiler.getTemplateGroup(),
+    };
+  }
 
   @Post("task")
   @SetRoles("super-admin")
-  createtask(@Body() data: any) {
+  public createtask(@Body() data: any) {
     console.log("create task ==> ");
     console.log(data);
     const { name, ...others } = data;
@@ -27,7 +35,7 @@ export class ApiController {
 
   @Get("task")
   @SetRoles("admin")
-  gettask(@Query("id") id: string) {
+  public gettask(@Query("id") id: string) {
     console.log("query task ==> " + id);
     const result = this.compiler.queryTask(id);
     console.log(result);

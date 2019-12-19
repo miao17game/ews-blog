@@ -8,8 +8,8 @@ import { IConfigs } from "./configs/config";
 
 // tslint:disable: no-unused-expression
 
-export const BUILD_ROOT = path.join(__dirname, "..", "..", "build");
-export const ASSETS_ROOT = path.join(__dirname, "..", "assets");
+export const BUILD_ROOT = path.join(__dirname, "..", "build");
+export const ASSETS_ROOT = path.join(__dirname, "assets");
 const noopPromise = (app: any) => Promise.resolve(app);
 
 type OnInitHook<T> = (app: T) => void | Promise<void>;

@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { HttpService } from "../../../services/http.service";
 
 export interface IMenuItem {
   name: string;
@@ -39,6 +40,10 @@ export class PortalService {
 
   public get menuCollapsed() {
     return this.isCollapsed;
+  }
+
+  constructor(private readonly http: HttpService) {
+    this.http.get("templates");
   }
 
   public toggleMenuCollapsed() {

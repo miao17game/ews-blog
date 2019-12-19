@@ -4,10 +4,12 @@ import chalk from "chalk";
 import uuid from "uuid/v4";
 import { cloneDeep } from "lodash";
 import { Injectable } from "@nestjs/common";
-import { Factory, IPageCreateOptions } from "@amoebajs/builder";
+import { Factory, IPageCreateOptions, GlobalMap, IGlobalMap } from "@amoebajs/builder";
 import { CompileService } from "@global/services/compile.service";
 
 // tslint:disable: object-literal-key-quotes
+// tslint:disable: no-string-literal
+// tslint:disable: variable-name
 
 export enum CompileTaskStatus {
   Pending,
@@ -36,58 +38,47 @@ export interface IWebsitePageHash {
 const ASSETS_DIR = path.resolve(__dirname, "..", "..", "assets");
 const INTERVAL = 1000;
 
-function getNpmSandbox() {
-  return path.resolve(__dirname, "..", "..", "temp");
-}
-
-function getTsconfigFile() {
-  return path.resolve(__dirname, "..", "..", "tsconfig.jsx.json");
-}
-
-function getSrcDir(id: string) {
-  return path.resolve(getNpmSandbox(), id, "src");
-}
-
-function getBuildDir(id: string) {
-  return path.resolve(getNpmSandbox(), id, "build");
-}
-
 @Injectable()
 export class CoreCompiler implements CompileService<ICompileTask> {
-  private factory = new Factory();
-  private tasks: ICompileTask[] = [];
-  private hash: IWebsitePageHash = {};
+  private _factory = new Factory();
+  private _tasks: ICompileTask[] = [];
+  private _hash: IWebsitePageHash = {};
+  private _mapCache!: IGlobalMap;
 
   private get builder() {
-    return this.factory.builder;
+    return this._factory.builder;
   }
 
   private get running() {
-    return this.tasks.findIndex(i => i.status === CompileTaskStatus.Running) >= 0;
+    return this._tasks.findIndex(i => i.status === CompileTaskStatus.Running) >= 0;
   }
 
   constructor() {
     this.autoWatch(INTERVAL);
   }
 
-  public getPageTemplate(name: string) {
-    const hash = this.hash[name];
+  public getTemplateGroup(): IGlobalMap {
+    return this._mapCache || (this._mapCache = cloneDeep(this._factory.builder.get(GlobalMap).maps));
+  }
+
+  public queryPageUri(name: string) {
+    const hash = this._hash[name];
     return !hash ? null : `website/${name}.${hash.latest}.html`;
   }
 
   public createtask(name: string, configs: IPageCreateOptions): string {
     const task: ICompileTask = {
-      id: new Date().getTime() + "-" + uuid().slice(0, 6),
+      id: createTaskID(),
       name,
       status: CompileTaskStatus.Pending,
       configs,
     };
-    this.tasks.push(task);
+    this._tasks.push(task);
     return task.id;
   }
 
   public queryTask(id: string): ICompileTask | null {
-    const target = this.tasks.find(i => i.id === id);
+    const target = this._tasks.find(i => i.id === id);
     if (!target) {
       return null;
     }
@@ -98,12 +89,12 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     if (this.running) {
       return;
     }
-    const firstPending = this.tasks.findIndex(i => i.status === CompileTaskStatus.Pending);
+    const firstPending = this._tasks.findIndex(i => i.status === CompileTaskStatus.Pending);
     // no work to do
     if (firstPending < 0) {
       return;
     }
-    const task = this.tasks[firstPending];
+    const task = this._tasks[firstPending];
     task.status = CompileTaskStatus.Running;
     const tempSrcDir = getSrcDir(task.id);
     const tempBuildDir = getBuildDir(task.id);
@@ -117,7 +108,7 @@ export class CoreCompiler implements CompileService<ICompileTask> {
 
   protected async startWork(task: ICompileTask, srcDir: string, buildDir: string) {
     const stamp = new Date().getTime();
-    const filehash = (this.hash[task.name] = this.hash[task.name] || { latest: "", files: {} });
+    const filehash = (this._hash[task.name] = this._hash[task.name] || { latest: "", files: {} });
     try {
       console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] is now running.`));
       await this.builder.createSource(srcDir, "app-component", task.configs);
@@ -203,4 +194,24 @@ export class CoreCompiler implements CompileService<ICompileTask> {
       overwrite: true,
     });
   }
+}
+
+function createTaskID(): string {
+  return new Date().getTime() + "-" + uuid().slice(0, 6);
+}
+
+function getNpmSandbox() {
+  return path.resolve(__dirname, "..", "..", "temp");
+}
+
+function getTsconfigFile() {
+  return path.resolve(__dirname, "..", "..", "tsconfig.jsx.json");
+}
+
+function getSrcDir(id: string) {
+  return path.resolve(getNpmSandbox(), id, "src");
+}
+
+function getBuildDir(id: string) {
+  return path.resolve(getNpmSandbox(), id, "build");
 }

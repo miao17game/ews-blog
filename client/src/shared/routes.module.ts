@@ -3,12 +3,7 @@ import { Routes, RouterModule } from "@angular/router";
 import { CommonsModule } from "./commons.module";
 
 const routes: Routes = [
-  // { path: "", redirectTo: "/main", pathMatch: "full" },
   { path: "", redirectTo: "/portal", pathMatch: "full" },
-  {
-    path: "main",
-    loadChildren: () => import("../pages/main/main.module").then(mod => mod.MainModule),
-  },
   {
     path: "portal",
     loadChildren: () => import("../pages/portal/portal.module").then(mod => mod.PortalModule),

@@ -10,7 +10,7 @@ export class SiteController {
 
   @Get("/:templateName")
   getIndexHtml(@Param("templateName") name: string, @Response() resp: Resp) {
-    const template = this.compiler.getPageTemplate(name);
+    const template = this.compiler.queryPageUri(name);
     if (!template) {
       throw new Error(`page[${name}] is not found`);
     }
