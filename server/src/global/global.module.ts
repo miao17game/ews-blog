@@ -5,10 +5,11 @@ import { UserService } from "@global/services/user.service";
 import { CompileService } from "@global/services/compile.service";
 import { CoreCompiler } from "@app/services/core-compile.service";
 import { ConfigService } from "@global/services/config.service";
+import { AppModule } from "@app/app.module";
 
 @Global()
 @Module({
-  imports: [],
+  imports: [AppModule],
   controllers: [],
   providers: [
     ConfigService,
