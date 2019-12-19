@@ -18,13 +18,16 @@ export async function bootstrap(configs: IConfigs, onInit: OnInitHook<NestExpres
   const app = await NestFactory.create<NestExpressApplication>(MainModule);
   app.get(ConfigService).setConfig(configs);
   app.useStaticAssets(BUILD_ROOT);
-  const environment = nunjucks.configure([BUILD_ROOT, ASSETS_ROOT], {
-    autoescape: true,
-    noCache: true,
-    express: app,
-  });
-  app.engine("html", environment.render);
+  app.engine("html", useNunjucks(app, { noCache: true }).render);
   app.setViewEngine("html");
   await onInit(app);
   await app.listen(3000);
+}
+
+export function useNunjucks(app: NestExpressApplication, { noCache = false }: { noCache?: boolean } = {}) {
+  return nunjucks.configure([BUILD_ROOT, ASSETS_ROOT], {
+    autoescape: true,
+    express: app,
+    noCache,
+  });
 }

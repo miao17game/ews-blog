@@ -1,7 +1,7 @@
 // import * as chokidar from "chokidar";
 // import * as path from "path";
 import * as nunjucks from "nunjucks";
-import { bootstrap as base, BUILD_ROOT, ASSETS_ROOT } from "./bootstrap.prod";
+import { bootstrap as base, BUILD_ROOT, ASSETS_ROOT, useNunjucks } from "./bootstrap.prod";
 import { IConfigs } from "./configs/config";
 
 // const serverRoot = path.resolve(__dirname, "..", "..", "src");
@@ -16,12 +16,6 @@ export async function bootstrap(configs: IConfigs) {
   //   console.log("file changed --> " + pathname);
   // });
   return base(configs, app => {
-    const environment = nunjucks.configure([BUILD_ROOT, ASSETS_ROOT], {
-      autoescape: true,
-      // use cache
-      noCache: false,
-      express: app,
-    });
-    app.engine("html", environment.render);
+    app.engine("html", useNunjucks(app, { noCache: false }).render);
   });
 }
