@@ -1,5 +1,8 @@
 <style>
   .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     background: #fff;
     padding: 0;
   }
@@ -25,6 +28,21 @@
     margin-left: 16px;
     font-size: 20px;
     cursor: pointer;
+  }
+
+  .user-group {
+    margin-right: 12px;
+  }
+
+  .user-group span {
+    font-weight: 400;
+  }
+
+  .user-group .anticon {
+    background-color: #ececec;
+    padding: 8px;
+    border-radius: 50%;
+    margin-right: 4px;
   }
 </style>
 <nz-layout>
@@ -56,6 +74,10 @@
   <nz-layout>
     <nz-header class="header">
       <i class="trigger" nz-icon [nzType]="menuType" (click)="onMenuClock($event)"></i>
+      <div class="user-group" *ngIf="userInfos.logined">
+        <i nz-icon nzType="user" nzTheme="outline"></i>
+        <span>{{ userInfos.name }}</span>
+      </div>
     </nz-header>
     <nz-content class="inner-content">
       <ng-content></ng-content>

@@ -17,6 +17,7 @@ type OnInitHook<T> = (app: T) => void | Promise<void>;
 export async function bootstrap(configs: IConfigs, onInit: OnInitHook<NestExpressApplication> = noopPromise) {
   const app = await NestFactory.create<NestExpressApplication>(MainModule);
   app.get(ConfigService).setConfig(configs);
+  app.enableCors({ origin: "*" });
   app.useStaticAssets(BUILD_ROOT);
   app.engine("html", useNunjucks(app, { noCache: true }).render);
   app.setViewEngine("html");

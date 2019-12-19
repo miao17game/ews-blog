@@ -38,12 +38,23 @@ export class PortalService {
     },
   ];
 
+  public userInfos = { logined: false };
+
   public get menuCollapsed() {
     return this.isCollapsed;
   }
 
-  constructor(private readonly http: HttpService) {
+  constructor(private readonly http: HttpService) {}
+
+  public fetchTemplates() {
     this.http.get("templates");
+  }
+
+  public async fetchUserInfos() {
+    const userInfo: any = await this.http.get("user");
+    if (userInfo.code === 0) {
+      this.userInfos = { ...this.userInfos, ...userInfo.data };
+    }
   }
 
   public toggleMenuCollapsed() {

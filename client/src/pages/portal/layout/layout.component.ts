@@ -22,13 +22,20 @@ export class PortalLayoutComponent implements OnInit, OnDestroy {
     return this.isCollapsed ? "menu-unfold" : "menu-fold";
   }
 
+  public get userInfos() {
+    return this.portal.userInfos;
+  }
+
   constructor(route: ActivatedRoute, router: Router, private portal: PortalService) {
     this.routeSubp = route.url.subscribe(data => {
       this.portal.setCurrentUrl(router.url);
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.portal.fetchTemplates();
+    this.portal.fetchUserInfos();
+  }
 
   ngOnDestroy(): void {
     if (this.routeSubp && !this.routeSubp.closed) {
