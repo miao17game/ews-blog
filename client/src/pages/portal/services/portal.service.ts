@@ -38,7 +38,7 @@ export class PortalService {
     },
   ];
 
-  public userInfos = { logined: false };
+  public userInfos: any = { logined: false, name: "" };
 
   public get menuCollapsed() {
     return this.isCollapsed;
