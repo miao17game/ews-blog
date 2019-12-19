@@ -9,7 +9,10 @@ export class FakeAuthService extends AuthService<string> {
     super();
   }
 
-  public hasAccess(roles: string[]): boolean | Promise<boolean> | Observable<boolean> {
+  public hasAccess(
+    host: import("@nestjs/common/interfaces").HttpArgumentsHost,
+    roles: string[],
+  ): boolean | Promise<boolean> | Observable<boolean> {
     getUserDelegate(this.user)
       .setLogined(true)
       .setUserId(new Date().getTime())
