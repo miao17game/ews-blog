@@ -1,7 +1,6 @@
 // import * as chokidar from "chokidar";
 // import * as path from "path";
-import * as nunjucks from "nunjucks";
-import { bootstrap as base, BUILD_ROOT, ASSETS_ROOT, useNunjucks } from "./bootstrap.prod";
+import { bootstrap as base, useNunjucks, IBootstrapOptions } from "./bootstrap.prod";
 import { IConfigs } from "./configs/config";
 
 // const serverRoot = path.resolve(__dirname, "..", "..", "src");
@@ -11,11 +10,14 @@ import { IConfigs } from "./configs/config";
 // const controllersRoot = path.resolve(serverRoot, "controllers", "**", "*");
 // const servicesRoot = path.resolve(serverRoot, "services", "**", "*");
 
-export async function bootstrap(configs: IConfigs) {
+export async function bootstrap(configs: IConfigs, options: Partial<IBootstrapOptions> = {}) {
   // chokidar.watch([assetsRoot, appRoot, configsRoot, controllersRoot, servicesRoot]).on("change", pathname => {
   //   console.log("file changed --> " + pathname);
   // });
-  return base(configs, app => {
-    app.engine("html", useNunjucks(app, { noCache: false }).render);
+  return base(configs, {
+    ...options,
+    onInit: app => {
+      app.engine("html", useNunjucks(app, { noCache: false }).render);
+    },
   });
 }

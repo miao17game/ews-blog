@@ -2,19 +2,28 @@ import { Injectable } from "@nestjs/common";
 import { cloneDeep } from "lodash";
 import { IConfigs } from "../../configs/config";
 
+// tslint:disable: variable-name
+
 @Injectable()
 export class ConfigService {
-  private config!: IConfigs;
+  private _config!: IConfigs;
+  private _env: { [prop: string]: string } = {};
 
-  setConfig(config: IConfigs) {
-    this.config = config;
+  public setConfig(config: IConfigs) {
+    this._config = config;
+    return this;
   }
 
-  getConfig() {
-    return cloneDeep(this.config);
+  public setEnv(env: { [prop: string]: string }) {
+    this._env = env;
+    return this;
   }
 
-  getHello(): string {
-    return "Hello World!";
+  public getConfig() {
+    return cloneDeep(this._config);
+  }
+
+  public getEnv() {
+    return cloneDeep(this._env);
   }
 }

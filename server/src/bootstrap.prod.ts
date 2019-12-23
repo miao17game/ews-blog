@@ -14,9 +14,20 @@ const noopPromise = (app: any) => Promise.resolve(app);
 
 type OnInitHook<T> = (app: T) => void | Promise<void>;
 
-export async function bootstrap(configs: IConfigs, onInit: OnInitHook<NestExpressApplication> = noopPromise) {
+export interface IBootstrapOptions {
+  env: { [prop: string]: string };
+  onInit: OnInitHook<NestExpressApplication>;
+}
+
+export async function bootstrap(
+  configs: IConfigs,
+  { env = {}, onInit = noopPromise }: Partial<IBootstrapOptions> = {},
+) {
   const app = await NestFactory.create<NestExpressApplication>(MainModule);
-  app.get(ConfigService).setConfig(configs);
+  app
+    .get(ConfigService)
+    .setConfig(configs)
+    .setEnv(env);
   app.enableCors({ origin: "*" });
   app.useStaticAssets(BUILD_ROOT);
   app.engine("html", useNunjucks(app, { noCache: true }).render);
