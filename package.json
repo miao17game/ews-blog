@@ -19,7 +19,7 @@
     "build:client": "cd client && yarn build",
     "build": "yarn build:client && yarn build:server",
     "postbuild": "rimraf server/build && copy client/dist/**/*.* server/build",
-    "docker:container": "docker build -t bigmogician/ews-core ."
+    "docker:container": "yarn && yarn build && docker build -t bigmogician/ews-core ."
   },
   "dependencies": {},
   "devDependencies": {
