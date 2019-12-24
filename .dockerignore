@@ -1,7 +1,1 @@
-node_modules
-server/node_modules
-server/build
-server/dist
-client/node_modules
-client/build
-npm-debug.log
+client
