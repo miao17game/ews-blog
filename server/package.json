@@ -18,9 +18,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "copy:assets": "copy src/assets/**/*.* dist/assets",
-    "copy:configs": "copy src/configs/**/*.json dist/configs",
-    "copy:tsconfig": "copy tsconfig.jsx.json dist",
+    "copy:assets": "npx copy src/assets/**/*.* dist/assets",
+    "copy:configs": "npx copy src/configs/**/*.json dist/configs",
+    "copy:tsconfig": "npx copy tsconfig.jsx.json dist",
     "copy:dev": "yarn prebuild && yarn copy:prod",
     "copy:prod": "yarn copy:assets && yarn copy:configs && yarn copy:tsconfig"
   },
