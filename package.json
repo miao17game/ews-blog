@@ -18,7 +18,8 @@
     "build:server": "cd server && yarn build",
     "build:client": "cd client && yarn build",
     "build": "yarn build:client && yarn build:server",
-    "postbuild": "rimraf server/build && copy client/dist/**/*.* server/build"
+    "postbuild": "npx rimraf server/build && npx copy client/dist/**/*.* server/build",
+    "docker:build": "docker build -t bigmogician/ews-core ."
   },
   "dependencies": {},
   "devDependencies": {
