@@ -15,21 +15,24 @@ const noopPromise = (app: any) => Promise.resolve(app);
 type OnInitHook<T> = (app: T) => void | Promise<void>;
 
 export interface IBootstrapOptions {
-  env: { [prop: string]: string };
-  onInit: OnInitHook<NestExpressApplication>;
+  configs: IConfigs;
+  ewsEnvs: { [prop: string]: string };
+  staticOptions: import("@nestjs/platform-express/interfaces/serve-static-options.interface").ServeStaticOptions;
+  beforeListen: OnInitHook<NestExpressApplication>;
 }
 
-export async function bootstrap(
-  configs: IConfigs,
-  { env = {}, onInit = noopPromise }: Partial<IBootstrapOptions> = {},
-) {
+export async function bootstrap({
+  configs,
+  ewsEnvs = {},
+  beforeListen: onInit = noopPromise,
+  staticOptions = {},
+}: Partial<IBootstrapOptions> = {}) {
   const app = await NestFactory.create<NestExpressApplication>(MainModule);
   app
     .get(ConfigService)
     .setConfig(configs)
-    .setEnv(env);
-  app.enableCors({ origin: "*" });
-  app.useStaticAssets(BUILD_ROOT);
+    .setEnv(ewsEnvs);
+  app.useStaticAssets(BUILD_ROOT, { maxAge: 3600000, ...staticOptions });
   app.engine("html", useNunjucks(app, { noCache: true }).render);
   app.setViewEngine("html");
   await onInit(app);
