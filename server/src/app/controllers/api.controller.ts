@@ -27,6 +27,23 @@ export class ApiController {
     };
   }
 
+  @Post("preview")
+  @SetRoles("super-admin")
+  public async createSourcePreview(@Body() data: any) {
+    console.log("create preview ==> ");
+    console.log(data);
+    const { name, ...others } = data;
+    const source = await this.compiler.createSourceString(others);
+    console.log(source);
+    return {
+      code: 0,
+      data: {
+        source,
+        configs: data,
+      },
+    };
+  }
+
   @Post("task")
   @SetRoles("super-admin")
   public createtask(@Body() data: any) {
