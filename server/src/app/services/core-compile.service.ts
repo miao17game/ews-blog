@@ -85,6 +85,12 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     return cloneDeep(target);
   }
 
+  public async createSourceString(configs: IPageCreateOptions): Promise<string> {
+    return new Promise(async (resolve, reject) => {
+      this.builder.createSource({ onEmit: resolve, configs }).catch(reject);
+    });
+  }
+
   protected async findAndStartTask() {
     if (this.running) {
       return;
@@ -111,7 +117,11 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     const filehash = (this._hash[task.name] = this._hash[task.name] || { latest: "", files: {} });
     try {
       console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] is now running.`));
-      await this.builder.createSource(srcDir, "app-component", task.configs);
+      await this.builder.createSource({
+        outDir: srcDir,
+        fileName: "app-component",
+        configs: task.configs,
+      });
       console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] compile successfully.`));
       await this.builder.buildSource({
         template: { title: "测试" },
