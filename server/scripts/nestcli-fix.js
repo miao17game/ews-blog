@@ -15,11 +15,14 @@ function scanfolder(folder) {
     } else if (lst.isFile()) {
       if (newP.endsWith(".js")) {
         const file = fs.readFileSync(newP, { encoding: "utf8" });
-        const newFile = file.replace(/require\("(.+)(C:\\\\.+)"\);/g, (_, __, ___) => {
-          const newPath = path.resolve(__, ___.replace(/\\\\/g, "/")).replace("\\server\\src", "\\server\\dist");
+        const newFile = file.replace(/require\(("|')(.+)([A-Z]{1}:\\\\.+)("|')\);/g, (_, rel, __, win, ___) => {
+          const newPath = path.resolve(rel, win.replace(/\\\\/g, "/")).replace("\\server\\src", "\\server\\dist");
           let final = path.relative(path.resolve(newP, ".."), newPath).replace(/\\/g, "/");
+          console.log("matched -> " + _);
           if (!final.startsWith(".")) final = "./" + final;
-          return `require("${final}");`;
+          const resolved = `require("${final}");`;
+          console.log("resolve -> " + resolved);
+          return resolved;
         });
         fs.writeFileSync(newP, newFile, { flag: "w+", encoding: "utf8" });
       }

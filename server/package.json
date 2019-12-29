@@ -6,10 +6,12 @@
   "license": "MIT",
   "scripts": {
     "prebuild": "rimraf dist",
+    "run:fix": "node scripts/nestcli-fix",
     "build": "nest build && yarn copy:prod",
-    "build:fix": "yarn build && node scripts/nestcli-fix",
+    "build:fix": "yarn build && yarn run:fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "yarn copy:dev && cross-env NODE_ENV=dev nest start",
+    "start:fix": "yarn build:fix && yarn start:prod",
     "start:dev": "yarn copy:dev && cross-env NODE_ENV=dev nest start --watch",
     "start:debug": "yarn copy:dev && cross-env NODE_ENV=dev nest start --debug --watch",
     "start:prod": "cross-env NODE_ENV=production node -r ./scripts/tsconfig-paths dist/main",

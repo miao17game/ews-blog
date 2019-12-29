@@ -12,7 +12,7 @@
     "install:client": "cd client && yarn install",
     "install:server": "cd server && yarn install",
     "install:all": "yarn install:client && yarn install:server",
-    "start": "cd server && yarn start:dev",
+    "start": "cd server && yarn start:fix",
     "start:prod": "cd server && yarn start:prod",
     "dev": "cd client && yarn start",
     "build:server": "cd server && yarn build",
