@@ -11,15 +11,15 @@
   "scripts": {
     "install:client": "cd client && yarn install",
     "install:server": "cd server && yarn install",
-    "install": "yarn install:client && yarn install:server",
-    "start": "cd server && yarn start:dev",
+    "install:all": "yarn install:client && yarn install:server",
+    "start": "cd server && yarn start:fix",
     "start:prod": "cd server && yarn start:prod",
     "dev": "cd client && yarn start",
     "build:server": "cd server && yarn build",
     "build:client": "cd client && yarn build",
     "build": "yarn build:client && yarn build:server",
     "postbuild": "npx rimraf server/build && npx copy client/dist/**/*.* server/build",
-    "docker:build": "docker build -t bigmogician/ews-core ."
+    "docker:build": "node scripts/docker.js"
   },
   "dependencies": {},
   "devDependencies": {

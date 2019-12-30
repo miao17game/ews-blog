@@ -6,9 +6,12 @@
   "license": "MIT",
   "scripts": {
     "prebuild": "rimraf dist",
+    "run:fix": "node scripts/nestcli-fix",
     "build": "nest build && yarn copy:prod",
+    "build:fix": "yarn build && yarn run:fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "yarn copy:dev && cross-env NODE_ENV=dev nest start",
+    "start:fix": "yarn build:fix && yarn start:prod",
     "start:dev": "yarn copy:dev && cross-env NODE_ENV=dev nest start --watch",
     "start:debug": "yarn copy:dev && cross-env NODE_ENV=dev nest start --debug --watch",
     "start:prod": "cross-env NODE_ENV=production node -r ./scripts/tsconfig-paths dist/main",
@@ -29,12 +32,14 @@
     "@nestjs/common": "^6.7.2",
     "@nestjs/core": "^6.7.2",
     "@nestjs/platform-express": "^6.7.2",
+    "fs-extra": "^8.1.0",
     "nunjucks": "^3.2.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.0",
     "rxjs": "^6.5.3"
   },
   "devDependencies": {
+    "@types/fs-extra": "^8.0.1",
     "@nestjs/cli": "^6.9.0",
     "@nestjs/schematics": "^6.7.0",
     "@nestjs/testing": "^6.7.1",
