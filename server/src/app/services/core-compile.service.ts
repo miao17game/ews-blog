@@ -4,12 +4,8 @@ import chalk from "chalk";
 import uuid from "uuid/v4";
 import { cloneDeep } from "lodash";
 import { Injectable } from "@nestjs/common";
-import { Factory, IPageCreateOptions, GlobalMap, IGlobalMap } from "@amoebajs/builder";
+import { Factory, GlobalMap, IGlobalMap, IPageCreateOptions } from "@amoebajs/builder";
 import { CompileService } from "@global/services/compile.service";
-
-// tslint:disable: object-literal-key-quotes
-// tslint:disable: no-string-literal
-// tslint:disable: variable-name
 
 export enum CompileTaskStatus {
   Pending,

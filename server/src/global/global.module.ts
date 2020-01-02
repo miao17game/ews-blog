@@ -1,4 +1,4 @@
-import { Module, Global } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { AuthService } from "@global/services/auth.service";
 import { FakeAuthService } from "@app/services/fake-auth.service";
 import { UserService } from "@global/services/user.service";
