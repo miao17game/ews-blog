@@ -9,9 +9,9 @@
   "license": "Apache License 2.0",
   "private": true,
   "scripts": {
-    "install:client": "cd client && yarn install --registry=https://registry.npm.taobao.org",
-    "install:server": "cd server && yarn install --registry=https://registry.npm.taobao.org",
-    "install:all": "yarn install:client && yarn install:server",
+    "install:client": "cd client && yarn install",
+    "install:server": "cd server && yarn install",
+    "install:all": "yarn && yarn install:client && yarn install:server",
     "start": "cd server && yarn start --watch",
     "start:fix": "cd server && yarn start:fix",
     "start:prod": "cd server && yarn start:prod",
