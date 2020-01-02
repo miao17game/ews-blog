@@ -1,0 +1,5 @@
+**/build
+**/dist
+**/node_modules
+**/scripts/**/*.js
+**/e2e

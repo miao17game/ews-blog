@@ -11,7 +11,7 @@
   "scripts": {
     "install:client": "cd client && yarn install",
     "install:server": "cd server && yarn install",
-    "install:all": "yarn install:client && yarn install:server",
+    "install:all": "yarn && yarn install:client && yarn install:server",
     "start": "cd server && yarn start --watch",
     "start:fix": "cd server && yarn start:fix",
     "start:prod": "cd server && yarn start:prod",
@@ -24,7 +24,17 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.14.0",
+    "@typescript-eslint/parser": "^2.14.0",
+    "babel-eslint": "^10.0.3",
     "copy": "^0.3.2",
-    "rimraf": "^3.0.0"
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.9.0",
+    "eslint-plugin-jsx-control-statements": "^2.2.1",
+    "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-react": "^7.17.0",
+    "prettier": "^1.19.1",
+    "rimraf": "^3.0.0",
+    "typescript": "^3.7.3"
   }
 }

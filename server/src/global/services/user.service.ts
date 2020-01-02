@@ -1,8 +1,5 @@
 import { Injectable, Scope } from "@nestjs/common";
 
-// tslint:disable: variable-name
-// tslint:disable: no-string-literal
-
 export interface IUserInfos<I, R, T> {
   logined: boolean;
   id: I;
