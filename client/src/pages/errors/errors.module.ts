@@ -1,5 +1,5 @@
 import { NgModule } from "@angular/core";
-import { Routes, RouterModule } from "@angular/router";
+import { RouterModule, Routes } from "@angular/router";
 import { Error404Component } from "./404/404.component";
 import { Error500Component } from "./500/500.component";
 import { CommonsModule } from "../../shared/commons.module";
