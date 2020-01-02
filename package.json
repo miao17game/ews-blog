@@ -1,8 +1,8 @@
 {
-  "name": "editable-web-system",
+  "name": "blog.ews",
   "version": "0.0.1",
   "main": "index.js",
-  "repository": "https://github.com/amoebajs/portal.git",
+  "repository": "https://github.com/miao17game/ews-blog.git",
   "contributors": [
     "bigmogician <bigmogician@outlook.com>"
   ],
