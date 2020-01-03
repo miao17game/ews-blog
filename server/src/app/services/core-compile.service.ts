@@ -153,8 +153,8 @@ export class CoreCompiler implements CompileService<ICompileTask> {
           return (shouldMoveBundle = false);
         },
       });
-      filehash.latest = task.id;
       if (shouldMoveBundle) {
+        filehash.latest = task.id;
         await this.moveHtmlBundle(task.name, task.id, buildDir);
       }
       task.status = CompileTaskStatus.Done;
