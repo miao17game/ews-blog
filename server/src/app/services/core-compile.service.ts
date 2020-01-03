@@ -82,9 +82,8 @@ export class CoreCompiler implements CompileService<ICompileTask> {
   }
 
   public async createSourceString(configs: IPageCreateOptions): Promise<string> {
-    return new Promise(async (resolve, reject) => {
-      this.builder.createSource({ onEmit: resolve, configs }).catch(reject);
-    });
+    const { sourceCode } = await this.builder.createSource({ configs });
+    return sourceCode;
   }
 
   protected async findAndStartTask() {
@@ -112,26 +111,22 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     const stamp = new Date().getTime();
     const filehash = (this._hash[task.name] = this._hash[task.name] || { latest: "", files: {} });
     try {
+      const targetFile = path.join(srcDir, "main.tsx");
       console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] is now running.`));
-      await this.builder.createSource({
-        outDir: srcDir,
-        fileName: "app-component",
+      const { sourceCode, depsJSON } = await this.builder.createSource({
         configs: task.configs,
       });
+      await fs.writeFile(targetFile, sourceCode, { encoding: "utf8", flag: "w+" });
       console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] compile successfully.`));
       await this.builder.buildSource({
         template: { title: "测试" },
-        entry: { app: path.join(srcDir, "main.tsx") },
+        entry: { app: targetFile },
         output: { path: buildDir, filename: "[name].[hash].js" },
         plugins: [this.builder.webpackPlugins.createProgressPlugin()],
         typescript: { tsconfig: getTsconfigFile() },
         sandbox: {
           rootPath: getNpmSandbox(),
-          dependencies: {
-            react: "^16.12.0",
-            zent: "^7.1.0",
-            "react-dom": "^16.12.0",
-          },
+          dependencies: JSON.parse(depsJSON),
         },
       });
       let shouldMoveBundle = true;
