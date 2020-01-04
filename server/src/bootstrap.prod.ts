@@ -5,6 +5,7 @@ import { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@global/services/config.service";
 import { MainModule } from "./main.module";
 import { IConfigs } from "./configs/config";
+import { Worker } from "./clusters";
 
 export const BUILD_ROOT = path.join(__dirname, "..", "build");
 export const ASSETS_ROOT = path.join(__dirname, "assets");
@@ -34,6 +35,11 @@ export async function bootstrap({
   app.engine("html", useNunjucks(app, { noCache: true }).render);
   app.setViewEngine("html");
   await onInit(app);
+  const worker = Worker.Create();
+  // worker
+  //   .registerTask("demo-task", {})
+  //   .then(() => console.log("success"))
+  //   .catch(() => console.log("existed"));
   await app.listen(3000);
 }
 
