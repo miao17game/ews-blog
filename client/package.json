@@ -13,7 +13,7 @@
   },
   "private": true,
   "dependencies": {
-    "@amoebajs/builder-websdk": "0.0.2-alpha.1578123533437",
+    "@amoebajs/builder-websdk": "0.0.2-alpha.1578124698431",
     "@angular/animations": "~8.2.13",
     "@angular/common": "~8.2.13",
     "@angular/compiler": "~8.2.13",
