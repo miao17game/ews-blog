@@ -1,28 +1,72 @@
 import cluster from "cluster";
+import os from "os";
 import { IWorkerSendMsg, IWorkRegisterTaskCompletedReceiveMsg, IWorkQueryTaskReceiveMsg } from "./worker";
 import { Task } from "./task";
 
 export * from "./task";
 
-export class Cluster {
-  static Create() {
-    return new Cluster();
+export interface IMasterOptions {
+  maxWorker?: number;
+}
+
+/**
+ * ## Master 执行机
+ */
+export class Master {
+  public static Create(god: typeof cluster, options: IMasterOptions = {}) {
+    return new Master(god, options);
   }
 
   private target = process;
+  private maxNum = os.cpus().length;
   private workers: number[] = [];
   private tasks: Task[] = [];
 
-  public addWorker(worker: cluster.Worker) {
-    this.workers.push(worker.process.pid);
-    worker.send({ type: "active", master: this.target.pid });
+  constructor(private god: typeof cluster, options: IMasterOptions = {}) {
+    this.init(options);
   }
 
-  public removeWorker(worker: cluster.Worker) {
-    this.workers = this.workers.filter(i => i !== worker.process.pid);
+  protected init(options: IMasterOptions) {
+    this.initOptions(options);
+    this.initWorkers();
+    this.onWorkerListening();
+    this.onWorkerExit();
+    this.onWorkerMessagereceived();
   }
 
-  public receiveMessage(message: IWorkerSendMsg, worker: cluster.Worker) {
+  protected initWorkers() {
+    for (var i = 0; i < this.maxNum; i++) {
+      this.god.fork();
+    }
+  }
+
+  protected initOptions(options: IMasterOptions) {
+    if (options.maxWorker !== void 0) {
+      this.maxNum = options.maxWorker;
+    }
+  }
+
+  protected onWorkerMessagereceived() {
+    this.god.on("message", (worker, message: any = {}) => {
+      this.receiveMessage(message, worker);
+    });
+  }
+
+  protected onWorkerExit() {
+    this.god.on("exit", (worker, code, signal) => {
+      console.log("exit worker " + worker.process.pid + " died");
+      this.removeWorker(worker);
+      this.god.fork();
+    });
+  }
+
+  protected onWorkerListening() {
+    this.god.on("listening", (worker, address) => {
+      console.log("listening: worker " + worker.process.pid);
+    });
+  }
+
+  private receiveMessage(message: IWorkerSendMsg, worker: cluster.Worker) {
     switch (message.type) {
       case "init":
         this.addWorker(worker);
@@ -57,5 +101,14 @@ export class Cluster {
       snapshot: exist?.getTaskSnapshot(),
       taskid: id,
     });
+  }
+
+  private addWorker(worker: cluster.Worker) {
+    this.workers.push(worker.process.pid);
+    worker.send({ type: "active", master: this.target.pid });
+  }
+
+  private removeWorker(worker: cluster.Worker) {
+    this.workers = this.workers.filter(i => i !== worker.process.pid);
   }
 }
