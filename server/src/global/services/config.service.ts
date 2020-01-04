@@ -2,8 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { cloneDeep } from "lodash";
 import { IConfigs } from "../../configs/config";
 
-// tslint:disable: variable-name
-
 @Injectable()
 export class ConfigService {
   private _config!: IConfigs;

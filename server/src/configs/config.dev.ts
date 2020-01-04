@@ -1,4 +1,4 @@
-import { merge, configs as defaultConfigs } from "./config";
+import { configs as defaultConfigs, merge } from "./config";
 
 export const configs = merge(defaultConfigs, {
   portal: {

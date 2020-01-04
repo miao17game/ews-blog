@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { IPageCreateOptions, IGlobalMap } from "@amoebajs/builder";
+import { IGlobalMap, IPageCreateOptions } from "@amoebajs/builder";
 
 @Injectable()
 export abstract class CompileService<T> {

@@ -1,6 +1,6 @@
 import { Component, ViewEncapsulation } from "@angular/core";
 import { Title } from "@angular/platform-browser";
-import { Router, NavigationEnd, ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, NavigationEnd, Router } from "@angular/router";
 import { filter, map, mergeMap } from "rxjs/operators";
 
 @Component({

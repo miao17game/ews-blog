@@ -1,9 +1,6 @@
-import { SetMetadata, UseGuards, NestInterceptor, UseInterceptors, ExceptionFilter, UseFilters } from "@nestjs/common";
+import { ExceptionFilter, SetMetadata, UseFilters, UseGuards } from "@nestjs/common";
 import { RolesGuard } from "@global/guards/roles.guard";
 import { ForbiddenExceptionFilter } from "@global/filters/forbidden.filter";
-
-// tslint:disable: no-unused-expression
-// tslint:disable: callable-types
 
 export const ROLES_GUARD__ROLES = "RolesGuard::roles";
 export const ROLES_GUARD__CLASS_ROLES = "RolesGuard::classRoles";

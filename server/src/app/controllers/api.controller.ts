@@ -1,7 +1,7 @@
-import { Controller, Post, Body, Get, Query } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query } from "@nestjs/common";
 import { CompileService } from "@global/services/compile.service";
 import { UserService } from "@global/services/user.service";
-import { UseRolesAuthentication, SetRoles } from "@utils/roles";
+import { SetRoles, UseRolesAuthentication } from "@utils/roles";
 import { ICompileTask } from "../services/core-compile.service";
 
 @Controller("api")
@@ -39,6 +39,7 @@ export class ApiController {
       code: 0,
       data: {
         source,
+        name,
         configs: data,
       },
     };

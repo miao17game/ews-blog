@@ -6,8 +6,6 @@ import { ConfigService } from "@global/services/config.service";
 import { MainModule } from "./main.module";
 import { IConfigs } from "./configs/config";
 
-// tslint:disable: no-unused-expression
-
 export const BUILD_ROOT = path.join(__dirname, "..", "build");
 export const ASSETS_ROOT = path.join(__dirname, "assets");
 const noopPromise = (app: any) => Promise.resolve(app);
