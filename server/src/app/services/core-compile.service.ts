@@ -6,6 +6,7 @@ import { cloneDeep } from "lodash";
 import { Injectable } from "@nestjs/common";
 import { Factory, GlobalMap, IGlobalMap, IPageCreateOptions } from "@amoebajs/builder";
 import { CompileService } from "@global/services/compile.service";
+import { ClusterWorker } from "@global/services/worker.service";
 
 export enum CompileTaskStatus {
   Pending,
@@ -19,6 +20,8 @@ export interface ICompileTask {
   name: string;
   status: CompileTaskStatus;
   configs: IPageCreateOptions;
+  creator: number;
+  operator: number;
   errorMsg?: string;
 }
 
@@ -31,13 +34,18 @@ export interface IWebsitePageHash {
   };
 }
 
+export interface ICompileStorage {
+  [name: string]: ICompileTask;
+}
+
 const ASSETS_DIR = path.resolve(__dirname, "..", "..", "assets");
-const INTERVAL = 1000;
+const INTERVAL = 3000;
+const TASKID = "task::core-compile-work";
+const STORAGEID = "storage::core-compile-work";
 
 @Injectable()
 export class CoreCompiler implements CompileService<ICompileTask> {
   private _factory = new Factory();
-  private _tasks: ICompileTask[] = [];
   private _hash: IWebsitePageHash = {};
   private _mapCache!: IGlobalMap;
 
@@ -45,12 +53,23 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     return this._factory.builder;
   }
 
-  private get running() {
-    return this._tasks.findIndex(i => i.status === CompileTaskStatus.Running) >= 0;
-  }
-
-  constructor() {
-    this.autoWatch(INTERVAL);
+  constructor(protected worker: ClusterWorker) {
+    worker.ACTIVE.subscribe(active => {
+      if (active) {
+        console.log("start set interval");
+        worker
+          .registerTask(TASKID, {
+            storage: STORAGEID,
+            data: <ICompileStorage>{},
+            autoReset: true,
+          })
+          .then(async () => {
+            await worker.runTask(TASKID);
+            this.autoWatch(INTERVAL);
+          })
+          .catch(() => this.autoWatch(INTERVAL));
+      }
+    });
   }
 
   public getTemplateGroup(): IGlobalMap {
@@ -62,23 +81,27 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     return !hash ? null : `website/${name}.${hash.latest}.html`;
   }
 
-  public createtask(name: string, configs: IPageCreateOptions): string {
+  public async createTask(name: string, configs: IPageCreateOptions): Promise<string> {
     const task: ICompileTask = {
       id: createTaskID(),
       name,
       status: CompileTaskStatus.Pending,
       configs,
+      creator: this.worker.id,
+      operator: -1,
     };
-    this._tasks.push(task);
+    await this.worker.updateTask(TASKID, { insert: [[task.id, task]] });
     return task.id;
   }
 
-  public queryTask(id: string): ICompileTask | null {
-    const target = this._tasks.find(i => i.id === id);
+  public async queryTask(id: string): Promise<ICompileTask | null> {
+    const snapshot = await this.worker.queryTaskStatus<ICompileStorage>(TASKID);
+    const currentList = snapshot.storage || {};
+    const target = currentList[id];
     if (!target) {
       return null;
     }
-    return cloneDeep(target);
+    return target;
   }
 
   public async createSourceString(configs: IPageCreateOptions): Promise<string> {
@@ -87,24 +110,47 @@ export class CoreCompiler implements CompileService<ICompileTask> {
   }
 
   protected async findAndStartTask() {
-    if (this.running) {
-      return;
-    }
-    const firstPending = this._tasks.findIndex(i => i.status === CompileTaskStatus.Pending);
-    // no work to do
-    if (firstPending < 0) {
-      return;
-    }
-    const task = this._tasks[firstPending];
-    task.status = CompileTaskStatus.Running;
-    const tempSrcDir = getSrcDir(task.id);
-    const tempBuildDir = getBuildDir(task.id);
-    fs.pathExists(tempSrcDir).then(async exist => {
+    try {
+      const snapshot = await this.worker.queryTaskStatus<ICompileStorage>(TASKID);
+      // console.log("current snapshot operator --> " + snapshot.operator);
+      // 非当前worker操作的任务，退出
+      if (snapshot.operator !== this.worker.id) {
+        return;
+      }
+      // console.log("current query worker --> " + this.worker.id);
+      console.log(Object.keys(snapshot.storage).map(l => snapshot.storage[l].status));
+      const currentList = Object.keys(snapshot.storage || {}).map(k => snapshot.storage[k]);
+      const runningTask = currentList.find(i => i.status === CompileTaskStatus.Running);
+      if (runningTask) {
+        // 上一轮执行节点已经离线，需要重置任务状态
+        if (runningTask.operator !== this.worker.id) {
+          runningTask.status = CompileTaskStatus.Pending;
+          runningTask.operator = this.worker.id;
+          await this.worker.updateTask(TASKID, { update: [[runningTask.id, runningTask]] });
+        }
+        return;
+      }
+      const firstPending = currentList.findIndex(i => i.status === CompileTaskStatus.Pending);
+      // 没有任务需要运行，退出
+      if (firstPending < 0) {
+        return;
+      }
+      const task = currentList[firstPending];
+      task.status = CompileTaskStatus.Running;
+      task.operator = this.worker.id;
+      await this.worker.updateTask(TASKID, { update: [[task.id, task]] });
+      const tempSrcDir = getSrcDir(task.id);
+      const tempBuildDir = getBuildDir(task.id);
+      const exist = await fs.pathExists(tempSrcDir);
       if (!exist) {
         fs.mkdirSync(tempSrcDir, { recursive: true });
       }
       await this.startWork(task, tempSrcDir, tempBuildDir);
-    });
+      await this.worker.updateTask(TASKID, { update: [[task.id, task]] });
+      await this.worker.finishTask(TASKID);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   protected async startWork(task: ICompileTask, srcDir: string, buildDir: string) {

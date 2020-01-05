@@ -11,6 +11,8 @@ import {
   IWorkerFinishTaskSendMsg,
   IWorkerRunTaskReceiveMsg,
   IWorkerFinishTaskReceiveMsg,
+  IWorkerUpdateTaskSendMsg,
+  IWorkerUpdateTaskReceiveMsg,
 } from "./message";
 
 /**
@@ -28,10 +30,15 @@ export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
   private _registerList: [string, (exist: boolean) => void][] = [];
   private _queryList: [string, (exist: boolean, snapshot: ITaskSnapshot<any>) => void][] = [];
   private _runList: [string, (sucess: boolean, control: boolean) => void][] = [];
+  private _updateList: [string, (sucess: boolean) => void][] = [];
   private _finishList: [string, (sucess: boolean) => void][] = [];
 
   public get isActive() {
     return this._init;
+  }
+
+  public get id() {
+    return this._target.pid;
   }
 
   constructor() {
@@ -51,29 +58,74 @@ export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
     this._onActiveFn = onActive;
   }
 
-  public registerTask(taskid: string, infos: any = {}) {
-    this.send<IWorkerRegisterTaskSendMsg>({ type: "register-task", taskid, infos });
+  public registerTask(
+    taskid: string,
+    options: {
+      data?: any;
+      autoReset?: boolean;
+      storage?: string;
+    },
+  ) {
+    this.send<IWorkerRegisterTaskSendMsg>({
+      type: "register-task",
+      taskid,
+      infos: options.data || {},
+      autoreset: options.autoReset || false,
+      storage: !options.storage ? false : options.storage,
+    });
     return new Promise<void>((resolve, reject) => {
       this._registerList.push([taskid, exist => (exist ? reject() : resolve())]);
     });
   }
 
   public queryTaskStatus<T = any>(taskid: string) {
-    this.send<IWorkerQueryTaskSendMsg>({ type: "query-task", taskid });
+    this.send<IWorkerQueryTaskSendMsg>({
+      type: "query-task",
+      taskid,
+    });
     return new Promise<ITaskSnapshot<T>>((resolve, reject) => {
       this._queryList.push([taskid, (exist, snapshot) => (exist ? resolve(snapshot) : reject())]);
     });
   }
 
   public runTask(taskid: string) {
-    this._target.send(<IWorkerRunTaskSendMsg>{ type: "run-task", taskid });
+    this._target.send(<IWorkerRunTaskSendMsg>{
+      type: "run-task",
+      taskid,
+    });
     return new Promise<boolean>((resolve, reject) => {
       this._runList.push([taskid, (success, control) => (success ? resolve(control) : reject())]);
     });
   }
 
+  public updateTask(
+    taskid: string,
+    kvs: {
+      delete?: string[];
+      insert?: [string, any][];
+      update?: [string, any][];
+    },
+  ) {
+    const { delete: del = [], insert = [], update = [] } = kvs;
+    this._target.send(<IWorkerUpdateTaskSendMsg>{
+      type: "update-task",
+      taskid,
+      changes: {
+        insert,
+        update,
+        delete: del,
+      },
+    });
+    return new Promise<boolean>((resolve, reject) => {
+      this._updateList.push([taskid, success => (success ? resolve() : reject())]);
+    });
+  }
+
   public finishTask(taskid: string) {
-    this.send<IWorkerFinishTaskSendMsg>({ type: "finish-task", taskid });
+    this.send<IWorkerFinishTaskSendMsg>({
+      type: "finish-task",
+      taskid,
+    });
     return new Promise<void>((resolve, reject) => {
       this._finishList.push([taskid, success => (success ? resolve() : reject())]);
     });
@@ -96,6 +148,9 @@ export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
         break;
       case "finish-task-result":
         this.resolveFinishTask(message);
+        break;
+      case "update-task-result":
+        this.resolveUpdateTask(message);
         break;
       default:
         break;
@@ -121,6 +176,10 @@ export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
 
   private resolveRunTask(data: IWorkerRunTaskReceiveMsg) {
     this._runList.filter(i => i[0] === data.taskid).forEach(task => task[1](data.success, data.control));
+  }
+
+  private resolveUpdateTask(data: IWorkerUpdateTaskReceiveMsg) {
+    this._updateList.filter(i => i[0] === data.taskid).forEach(task => task[1](data.success));
   }
 
   private resolveFinishTask(data: IWorkerFinishTaskReceiveMsg) {

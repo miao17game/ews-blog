@@ -3,9 +3,9 @@ import * as nunjucks from "nunjucks";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@global/services/config.service";
+import { ClusterWorker } from "@global/services/worker.service";
 import { MainModule } from "./main.module";
 import { IConfigs } from "./configs/config";
-import { Worker } from "./clusters";
 
 export const BUILD_ROOT = path.join(__dirname, "..", "build");
 export const ASSETS_ROOT = path.join(__dirname, "assets");
@@ -27,6 +27,7 @@ export async function bootstrap({
   staticOptions = {},
 }: Partial<IBootstrapOptions> = {}) {
   const app = await NestFactory.create<NestExpressApplication>(MainModule);
+  app.get(ClusterWorker);
   app
     .get(ConfigService)
     .setConfig(configs)
@@ -35,11 +36,6 @@ export async function bootstrap({
   app.engine("html", useNunjucks(app, { noCache: true }).render);
   app.setViewEngine("html");
   await onInit(app);
-  const worker = Worker.Create();
-  // worker
-  //   .registerTask("demo-task", {})
-  //   .then(() => console.log("success"))
-  //   .catch(() => console.log("existed"));
   await app.listen(3000);
 }
 

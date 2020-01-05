@@ -25,6 +25,12 @@ export interface IWorkerRunTaskReceiveMsg {
   taskid: string;
 }
 
+export interface IWorkerUpdateTaskReceiveMsg {
+  type: "update-task-result";
+  success: boolean;
+  taskid: string;
+}
+
 export interface IWorkerFinishTaskReceiveMsg {
   type: "finish-task-result";
   success: boolean;
@@ -36,7 +42,8 @@ export type IWorkerReceiveMsg =
   | IWorkRegisterTaskCompletedReceiveMsg
   | IWorkerQueryTaskReceiveMsg
   | IWorkerRunTaskReceiveMsg
-  | IWorkerFinishTaskReceiveMsg;
+  | IWorkerFinishTaskReceiveMsg
+  | IWorkerUpdateTaskReceiveMsg;
 
 //#endregion
 
@@ -50,6 +57,8 @@ export interface IWorkerRegisterTaskSendMsg {
   type: "register-task";
   taskid: string;
   infos: any;
+  autoreset: boolean;
+  storage: string | false;
 }
 
 export interface IWorkerQueryTaskSendMsg {
@@ -62,6 +71,16 @@ export interface IWorkerRunTaskSendMsg {
   taskid: string;
 }
 
+export interface IWorkerUpdateTaskSendMsg {
+  type: "update-task";
+  taskid: string;
+  changes: {
+    update: [string, any][];
+    insert: [string, any][];
+    delete: string[];
+  };
+}
+
 export interface IWorkerFinishTaskSendMsg {
   type: "finish-task";
   taskid: string;
@@ -72,6 +91,7 @@ export type IWorkerSendMsg =
   | IWorkerRegisterTaskSendMsg
   | IWorkerQueryTaskSendMsg
   | IWorkerRunTaskSendMsg
-  | IWorkerFinishTaskSendMsg;
+  | IWorkerFinishTaskSendMsg
+  | IWorkerUpdateTaskSendMsg;
 
 //#endregion

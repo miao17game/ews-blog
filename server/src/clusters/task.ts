@@ -3,19 +3,18 @@ export interface ITaskSnapshot<T extends { [prop: string]: any } = {}> {
   locked: boolean;
   creator: number;
   operator: number;
-  infos: T;
+  storage: T;
 }
 
-export class Task<T extends { [prop: string]: any } = {}> {
-  static Create(id: string, creator?: number) {
+export class Task {
+  static Create(id: string, creator: number) {
     return new Task(id, creator);
   }
 
   private _locked: boolean = false;
   private _operator: number = -1;
-  private _creator: number = -1;
   private _finished: boolean = false;
-  private _infos: T = <T>{};
+  private _storage!: string | undefined;
 
   public get locked() {
     return this._locked;
@@ -23,6 +22,14 @@ export class Task<T extends { [prop: string]: any } = {}> {
 
   public get finished() {
     return this._finished;
+  }
+
+  public get hasStorage() {
+    return this._storage !== void 0;
+  }
+
+  public get autoReset() {
+    return this._autoReset;
   }
 
   public get id() {
@@ -37,28 +44,30 @@ export class Task<T extends { [prop: string]: any } = {}> {
     return this._operator;
   }
 
-  constructor(private taskid: string, creator?: number) {
-    if (creator !== void 0) {
-      this._creator = creator;
-    }
+  public get storageName() {
+    return this._storage;
   }
 
-  public getTaskSnapshot(): ITaskSnapshot<T> {
+  constructor(private taskid: string, private _creator: number, private _autoReset = false) {}
+
+  public reset(operator?: number) {
+    this._operator = operator === void 0 ? -1 : operator;
+    this._finished = false;
+    this._locked = false;
+  }
+
+  public setStorage(name: string) {
+    this._storage = name;
+  }
+
+  public getTaskSnapshot(): ITaskSnapshot<{}> {
     return {
       id: this.taskid,
       locked: this._locked,
       creator: this._creator,
       operator: this._operator,
-      infos: { ...this._infos },
+      storage: {},
     };
-  }
-
-  public setTaskInfos(infos: Partial<T>) {
-    this._infos = {
-      ...this._infos,
-      ...infos,
-    };
-    return this;
   }
 
   public lockTask(operator: number) {
@@ -71,12 +80,12 @@ export class Task<T extends { [prop: string]: any } = {}> {
   public finishTask(operator: number) {
     if (this._locked) {
       if (this._operator === operator) {
-        this._finished = true;
+        this._finished = !this._autoReset;
         return true;
       }
       return false;
     } else {
-      this._finished = true;
+      this._finished = !this._autoReset;
       return true;
     }
   }

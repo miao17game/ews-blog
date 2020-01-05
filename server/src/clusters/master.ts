@@ -7,8 +7,11 @@ import {
   IWorkActiveReceiveMsg,
   IWorkerRunTaskReceiveMsg,
   IWorkerFinishTaskReceiveMsg,
+  IWorkerUpdateTaskReceiveMsg,
+  IWorkerUpdateTaskSendMsg,
 } from "./message";
 import { Task } from "./task";
+import { ClusterStorage } from "./storage";
 
 export interface IMasterOptions {
   maxWorker?: number;
@@ -25,8 +28,9 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
   private _target = process;
   private _maxNum = os.cpus().length;
   private _workers: number[] = [];
-  private _tasks: Task<any>[] = [];
-  private _finished_tasks: Task<any>[] = [];
+  private _storages: Map<string, ClusterStorage<any>> = new Map();
+  private _tasks: Map<string, Task> = new Map();
+  private _finished_tasks: Task[] = [];
 
   constructor(private _god: typeof cluster, options: IMasterOptions = {}) {
     this.init(options);
@@ -62,8 +66,8 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
     this._god.on("exit", (worker, code, signal) => {
       const workerId = worker.process.pid;
       console.log("exit worker " + workerId + " died");
-      this._clearTasksForCurrentWorker(workerId);
       this._removeWorker(worker);
+      this._clearTasksForCurrentWorker(workerId);
       this._god.fork();
     });
   }
@@ -81,7 +85,7 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
         this._addWorker(worker);
         break;
       case "register-task":
-        this._createTask(message.taskid, message.infos, worker);
+        this._createTask(message.taskid, message.infos, message.autoreset, message.storage, worker);
         break;
       case "query-task":
         this._queryTask(message.taskid, worker);
@@ -91,6 +95,9 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
         break;
       case "finish-task":
         this._finishTask(message.taskid, worker);
+        break;
+      case "update-task":
+        this._updateTask(message.taskid, message.changes, worker);
         break;
       default:
         break;
@@ -113,13 +120,22 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
     this._workers = this._workers.filter(i => i !== worker.process.pid);
   }
 
-  private _createTask(id: string, infos: string, worker: cluster.Worker) {
-    let exist = this._tasks.find(i => i.id === id);
+  private _createTask(id: string, infos: any, autorestart: boolean, storage: string | false, worker: cluster.Worker) {
+    let exist = this._tasks.get(id);
     let existed = true;
     if (!exist) {
       existed = false;
-      exist = new Task(id, worker.process.pid).setTaskInfos(infos);
-      this._tasks.push(exist);
+      exist = new Task(id, worker.process.pid, autorestart);
+      if (storage !== false) {
+        exist.setStorage(storage);
+        const existSto = this._storages.get(storage);
+        if (existSto) {
+          existSto.updateStorage(infos);
+        } else {
+          this._storages.set(storage, new ClusterStorage(storage).updateStorage(infos));
+        }
+      }
+      this._tasks.set(id, exist);
     }
     this.send<IWorkRegisterTaskCompletedReceiveMsg>(worker, {
       type: "register-completed",
@@ -129,17 +145,22 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
   }
 
   private _queryTask(id: string, worker: cluster.Worker) {
-    const exist = this._tasks.find(i => i.id === id);
+    const exist = this._tasks.get(id);
+    let storage: any = {};
+    if (exist) {
+      const sto = this._storages.get(exist.storageName);
+      storage = sto?.data || {};
+    }
     this.send<IWorkerQueryTaskReceiveMsg>(worker, {
       type: "query-task-result",
       exist: !!exist,
-      snapshot: exist?.getTaskSnapshot(),
+      snapshot: { ...(exist?.getTaskSnapshot() || {}), storage },
       taskid: id,
     });
   }
 
   private _runTask(taskid: string, worker: cluster.Worker) {
-    const task = this._tasks.find(i => i.id === taskid);
+    const task = this._tasks.get(taskid);
     let hasControl = false;
     let success = false;
     if (task) {
@@ -157,8 +178,35 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
     });
   }
 
+  private _updateTask(taskid: string, changes: IWorkerUpdateTaskSendMsg["changes"], worker: cluster.Worker) {
+    const task = this._tasks.get(taskid);
+    let success = false;
+    if (task) {
+      const existSto = this._storages.get(task.storageName);
+      if (existSto) {
+        const newData = existSto.data;
+        for (const iterator of changes.insert) {
+          newData[iterator[0]] = iterator[1];
+        }
+        for (const iterator of changes.update) {
+          newData[iterator[0]] = iterator[1];
+        }
+        for (const iterator of changes.delete) {
+          delete newData[iterator];
+        }
+        existSto.updateStorage(newData, true);
+        success = true;
+      }
+    }
+    this.send<IWorkerUpdateTaskReceiveMsg>(worker, {
+      type: "update-task-result",
+      success,
+      taskid,
+    });
+  }
+
   private _finishTask(taskid: string, worker: cluster.Worker) {
-    const task = this._tasks.find(i => i.id === taskid);
+    const task = this._tasks.get(taskid);
     let success = false;
     if (task) {
       success = task.finishTask(worker.process.pid);
@@ -172,7 +220,7 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
   }
 
   private _clearTasksForCurrentWorker(workerId: number) {
-    this._tasks
+    Array.from(this._tasks.values())
       .filter(i => i.operator === workerId)
       .forEach(task => {
         task.finishTask(task.operator);
@@ -180,8 +228,12 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
       });
   }
 
-  private _clearFinishedTask(task: Task<any>) {
-    this._tasks = this._tasks.filter(i => i.id !== task.id);
-    this._finished_tasks.push(task);
+  private _clearFinishedTask(task: Task) {
+    if (!task.autoReset) {
+      this._finished_tasks.push(task);
+      this._tasks.delete(task.id);
+    } else {
+      task.reset(this._workers[0]);
+    }
   }
 }
