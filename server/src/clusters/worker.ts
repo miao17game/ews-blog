@@ -7,6 +7,10 @@ import {
   IWorkerReceiveMsg,
   IWorkActiveReceiveMsg,
   IWorkRegisterTaskCompletedReceiveMsg,
+  IWorkerRunTaskSendMsg,
+  IWorkerFinishTaskSendMsg,
+  IWorkerRunTaskReceiveMsg,
+  IWorkerFinishTaskReceiveMsg,
 } from "./message";
 
 /**
@@ -17,15 +21,17 @@ export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
     return new Worker();
   }
 
-  private target = process;
-  private parent: number = -1;
-  private init: boolean = false;
-  private onActiveFn: () => void = () => {};
-  private registerList: [string, (exist: boolean) => void][] = [];
-  private queryList: [string, (exist: boolean, snapshot: ITaskSnapshot<any>) => void][] = [];
+  private _target = process;
+  private _parent: number = -1;
+  private _init: boolean = false;
+  private _onActiveFn: () => void = () => {};
+  private _registerList: [string, (exist: boolean) => void][] = [];
+  private _queryList: [string, (exist: boolean, snapshot: ITaskSnapshot<any>) => void][] = [];
+  private _runList: [string, (sucess: boolean, control: boolean) => void][] = [];
+  private _finishList: [string, (sucess: boolean) => void][] = [];
 
   public get isActive() {
-    return this.init;
+    return this._init;
   }
 
   constructor() {
@@ -34,28 +40,42 @@ export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
 
   protected initWorker() {
     this.onWorkerMessageReceived();
-    this.target.send(<IWorkerInitSendMsg>{ type: "init" });
+    this.send<IWorkerInitSendMsg>({ type: "init" });
   }
 
   protected onWorkerMessageReceived() {
-    this.target.on("message", (data: any = {}) => this.onMessageReceived(data));
+    this._target.on("message", (data: any = {}) => this.onMessageReceived(data));
   }
 
   public onActive(onActive: () => void) {
-    this.onActiveFn = onActive;
+    this._onActiveFn = onActive;
   }
 
   public registerTask(taskid: string, infos: any = {}) {
-    this.target.send(<IWorkerRegisterTaskSendMsg>{ type: "register-task", taskid, infos });
+    this.send<IWorkerRegisterTaskSendMsg>({ type: "register-task", taskid, infos });
     return new Promise<void>((resolve, reject) => {
-      this.registerList.push([taskid, exist => (exist ? reject() : resolve())]);
+      this._registerList.push([taskid, exist => (exist ? reject() : resolve())]);
     });
   }
 
   public queryTaskStatus<T = any>(taskid: string) {
-    this.target.send(<IWorkerQueryTaskSendMsg>{ type: "query-task", taskid });
+    this.send<IWorkerQueryTaskSendMsg>({ type: "query-task", taskid });
     return new Promise<ITaskSnapshot<T>>((resolve, reject) => {
-      this.queryList.push([taskid, (exist, snapshot) => (exist ? resolve(snapshot) : reject())]);
+      this._queryList.push([taskid, (exist, snapshot) => (exist ? resolve(snapshot) : reject())]);
+    });
+  }
+
+  public runTask(taskid: string) {
+    this._target.send(<IWorkerRunTaskSendMsg>{ type: "run-task", taskid });
+    return new Promise<boolean>((resolve, reject) => {
+      this._runList.push([taskid, (success, control) => (success ? resolve(control) : reject())]);
+    });
+  }
+
+  public finishTask(taskid: string) {
+    this.send<IWorkerFinishTaskSendMsg>({ type: "finish-task", taskid });
+    return new Promise<void>((resolve, reject) => {
+      this._finishList.push([taskid, success => (success ? resolve() : reject())]);
     });
   }
 
@@ -71,21 +91,39 @@ export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
       case "query-task-result":
         this.resolveQueryTask(message);
         break;
+      case "run-task-result":
+        this.resolveRunTask(message);
+        break;
+      case "finish-task-result":
+        this.resolveFinishTask(message);
+        break;
       default:
         break;
     }
   }
 
+  protected send<D>(data: D) {
+    return this._target.send(data);
+  }
+
   private resolveOnActive(data: IWorkActiveReceiveMsg) {
-    this.parent = data.master;
-    this.onActiveFn();
+    this._parent = data.master;
+    this._onActiveFn();
   }
 
   private resolveQueryTask(data: IWorkerQueryTaskReceiveMsg) {
-    this.queryList.filter(i => i[0] === data.taskid).forEach(task => task[1](data.exist, data.snapshot));
+    this._queryList.filter(i => i[0] === data.taskid).forEach(task => task[1](data.exist, data.snapshot));
   }
 
   private resolveTaskRegister(data: IWorkRegisterTaskCompletedReceiveMsg) {
-    this.registerList.filter(i => i[0] === data.taskid).forEach(task => task[1](data.exist));
+    this._registerList.filter(i => i[0] === data.taskid).forEach(task => task[1](data.exist));
+  }
+
+  private resolveRunTask(data: IWorkerRunTaskReceiveMsg) {
+    this._runList.filter(i => i[0] === data.taskid).forEach(task => task[1](data.success, data.control));
+  }
+
+  private resolveFinishTask(data: IWorkerFinishTaskReceiveMsg) {
+    this._finishList.filter(i => i[0] === data.taskid).forEach(task => task[1](data.success));
   }
 }

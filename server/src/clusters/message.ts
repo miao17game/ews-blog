@@ -18,10 +18,25 @@ export interface IWorkerQueryTaskReceiveMsg {
   taskid: string;
 }
 
+export interface IWorkerRunTaskReceiveMsg {
+  type: "run-task-result";
+  success: boolean;
+  control: boolean;
+  taskid: string;
+}
+
+export interface IWorkerFinishTaskReceiveMsg {
+  type: "finish-task-result";
+  success: boolean;
+  taskid: string;
+}
+
 export type IWorkerReceiveMsg =
   | IWorkActiveReceiveMsg
   | IWorkRegisterTaskCompletedReceiveMsg
-  | IWorkerQueryTaskReceiveMsg;
+  | IWorkerQueryTaskReceiveMsg
+  | IWorkerRunTaskReceiveMsg
+  | IWorkerFinishTaskReceiveMsg;
 
 //#endregion
 
@@ -42,6 +57,21 @@ export interface IWorkerQueryTaskSendMsg {
   taskid: string;
 }
 
-export type IWorkerSendMsg = IWorkerInitSendMsg | IWorkerRegisterTaskSendMsg | IWorkerQueryTaskSendMsg;
+export interface IWorkerRunTaskSendMsg {
+  type: "run-task";
+  taskid: string;
+}
+
+export interface IWorkerFinishTaskSendMsg {
+  type: "finish-task";
+  taskid: string;
+}
+
+export type IWorkerSendMsg =
+  | IWorkerInitSendMsg
+  | IWorkerRegisterTaskSendMsg
+  | IWorkerQueryTaskSendMsg
+  | IWorkerRunTaskSendMsg
+  | IWorkerFinishTaskSendMsg;
 
 //#endregion
