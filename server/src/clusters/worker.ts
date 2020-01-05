@@ -1,9 +1,18 @@
 import { ITaskSnapshot } from "./task";
+import {
+  IWorkerQueryTaskReceiveMsg,
+  IWorkerInitSendMsg,
+  IWorkerRegisterTaskSendMsg,
+  IWorkerQueryTaskSendMsg,
+  IWorkerReceiveMsg,
+  IWorkActiveReceiveMsg,
+  IWorkRegisterTaskCompletedReceiveMsg,
+} from "./message";
 
 /**
  * ## Worker 执行节点
  */
-export class Worker {
+export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
   public static Create() {
     return new Worker();
   }
@@ -11,7 +20,7 @@ export class Worker {
   private target = process;
   private parent: number = -1;
   private init: boolean = false;
-  private onActiveEn: () => void = () => {};
+  private onActiveFn: () => void = () => {};
   private registerList: [string, (exist: boolean) => void][] = [];
   private queryList: [string, (exist: boolean, snapshot: ITaskSnapshot<any>) => void][] = [];
 
@@ -24,16 +33,16 @@ export class Worker {
   }
 
   protected initWorker() {
-    this.onMessageReceived();
+    this.onWorkerMessageReceived();
     this.target.send(<IWorkerInitSendMsg>{ type: "init" });
   }
 
-  protected onMessageReceived() {
-    this.target.on("message", (data: any = {}) => this.listenMessage(data));
+  protected onWorkerMessageReceived() {
+    this.target.on("message", (data: any = {}) => this.onMessageReceived(data));
   }
 
   public onActive(onActive: () => void) {
-    this.onActiveEn = onActive;
+    this.onActiveFn = onActive;
   }
 
   public registerTask(taskid: string, infos: any = {}) {
@@ -50,16 +59,17 @@ export class Worker {
     });
   }
 
-  private listenMessage(data: IWorkerReceiveMsg) {
-    switch (data.type) {
+  protected onMessageReceived(data: T) {
+    const message: IWorkerReceiveMsg = data;
+    switch (message.type) {
       case "active":
-        this.resolveOnActive(data);
+        this.resolveOnActive(message);
         break;
       case "register-completed":
-        this.resolveTaskRegister(data);
+        this.resolveTaskRegister(message);
         break;
       case "query-task-result":
-        this.resolveQueryTask(data);
+        this.resolveQueryTask(message);
         break;
       default:
         break;
@@ -68,10 +78,10 @@ export class Worker {
 
   private resolveOnActive(data: IWorkActiveReceiveMsg) {
     this.parent = data.master;
-    this.onActiveEn();
+    this.onActiveFn();
   }
 
-  private resolveQueryTask(data: IWorkQueryTaskReceiveMsg) {
+  private resolveQueryTask(data: IWorkerQueryTaskReceiveMsg) {
     this.queryList.filter(i => i[0] === data.taskid).forEach(task => task[1](data.exist, data.snapshot));
   }
 
@@ -79,44 +89,3 @@ export class Worker {
     this.registerList.filter(i => i[0] === data.taskid).forEach(task => task[1](data.exist));
   }
 }
-
-//#region receive msgs
-export interface IWorkActiveReceiveMsg {
-  type: "active";
-  master: number;
-}
-
-export interface IWorkRegisterTaskCompletedReceiveMsg {
-  type: "register-completed";
-  exist: boolean;
-  taskid: string;
-}
-
-export interface IWorkQueryTaskReceiveMsg {
-  type: "query-task-result";
-  exist: boolean;
-  snapshot: any;
-  taskid: string;
-}
-
-export type IWorkerReceiveMsg = IWorkActiveReceiveMsg | IWorkRegisterTaskCompletedReceiveMsg | IWorkQueryTaskReceiveMsg;
-//#endregion
-
-//#region send msgs
-export interface IWorkerInitSendMsg {
-  type: "init";
-}
-
-export interface IWorkerRegisterTaskSendMsg {
-  type: "register-task";
-  taskid: string;
-  infos: any;
-}
-
-export interface IWorkerQueryTaskSendMsg {
-  type: "query-task";
-  taskid: string;
-}
-
-export type IWorkerSendMsg = IWorkerInitSendMsg | IWorkerRegisterTaskSendMsg | IWorkerQueryTaskSendMsg;
-//#endregion

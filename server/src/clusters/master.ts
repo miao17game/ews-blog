@@ -1,18 +1,21 @@
 import cluster from "cluster";
 import os from "os";
-import { IWorkerSendMsg, IWorkRegisterTaskCompletedReceiveMsg, IWorkQueryTaskReceiveMsg } from "./worker";
+import {
+  IWorkerSendMsg,
+  IWorkRegisterTaskCompletedReceiveMsg,
+  IWorkerQueryTaskReceiveMsg,
+  IWorkActiveReceiveMsg,
+} from "./message";
 import { Task } from "./task";
-
-export * from "./task";
 
 export interface IMasterOptions {
   maxWorker?: number;
 }
 
 /**
- * ## Master 执行机
+ * ## Master 主机
  */
-export class Master {
+export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
   public static Create(god: typeof cluster, options: IMasterOptions = {}) {
     return new Master(god, options);
   }
@@ -48,7 +51,7 @@ export class Master {
 
   protected onWorkerMessagereceived() {
     this.god.on("message", (worker, message: any = {}) => {
-      this.receiveMessage(message, worker);
+      this.onMessageReceived(message, worker);
     });
   }
 
@@ -66,7 +69,8 @@ export class Master {
     });
   }
 
-  private receiveMessage(message: IWorkerSendMsg, worker: cluster.Worker) {
+  protected onMessageReceived(data: T, worker: cluster.Worker) {
+    const message: IWorkerSendMsg = data;
     switch (message.type) {
       case "init":
         this.addWorker(worker);
@@ -82,6 +86,10 @@ export class Master {
     }
   }
 
+  private send<D>(worker: cluster.Worker, data: D) {
+    return worker.send(data);
+  }
+
   private createTask(id: string, infos: string, worker: cluster.Worker) {
     let exist = this.tasks.find(i => i.taskId === id);
     let existed = true;
@@ -90,12 +98,16 @@ export class Master {
       exist = new Task(id, worker.process.pid).setTaskInfos(infos);
       this.tasks.push(exist);
     }
-    worker.send(<IWorkRegisterTaskCompletedReceiveMsg>{ type: "register-completed", exist: existed, taskid: id });
+    this.send<IWorkRegisterTaskCompletedReceiveMsg>(worker, {
+      type: "register-completed",
+      exist: existed,
+      taskid: id,
+    });
   }
 
   private queryTask(id: string, worker: cluster.Worker) {
     const exist = this.tasks.find(i => i.taskId === id);
-    worker.send(<IWorkQueryTaskReceiveMsg>{
+    this.send<IWorkerQueryTaskReceiveMsg>(worker, {
       type: "query-task-result",
       exist: !!exist,
       snapshot: exist?.getTaskSnapshot(),
@@ -105,7 +117,10 @@ export class Master {
 
   private addWorker(worker: cluster.Worker) {
     this.workers.push(worker.process.pid);
-    worker.send({ type: "active", master: this.target.pid });
+    this.send<IWorkActiveReceiveMsg>(worker, {
+      type: "active",
+      master: this.target.pid,
+    });
   }
 
   private removeWorker(worker: cluster.Worker) {
