@@ -40,6 +40,7 @@ export interface ICompileStorage {
 
 const ASSETS_DIR = path.resolve(__dirname, "..", "..", "assets");
 const INTERVAL = 3000;
+const RANDOM_DELAY = Math.floor(Math.random() * 3000);
 const TASKID = "task::core-compile-work";
 const STORAGEID = "storage::core-compile-work";
 
@@ -56,7 +57,7 @@ export class CoreCompiler implements CompileService<ICompileTask> {
   constructor(protected worker: ClusterWorker) {
     worker.ACTIVE.subscribe(active => {
       if (active) {
-        // console.log("start set interval");
+        // console.log("start set interval " + INTERVAL);
         worker
           .registerTask(TASKID, {
             storage: STORAGEID,
@@ -113,11 +114,11 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     try {
       const snapshot = await this.worker.queryTaskStatus<ICompileStorage>(TASKID);
       // console.log("current snapshot operator --> " + snapshot.operator);
+      // console.log("current query worker --> " + this.worker.id);
       // 非当前worker操作的任务，退出
       if (snapshot.operator !== this.worker.id) {
         return;
       }
-      // console.log("current query worker --> " + this.worker.id);
       // console.log(Object.keys(snapshot.storage).map(l => snapshot.storage[l].status));
       const currentList = Object.keys(snapshot.storage || {}).map(k => snapshot.storage[k]);
       const runningTask = currentList.find(i => i.status === CompileTaskStatus.Running);
@@ -228,7 +229,13 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     }
   }
 
-  protected autoWatch(time: number) {
+  protected delay(time: number) {
+    return new Promise(resolve => setTimeout(resolve, time));
+  }
+
+  protected async autoWatch(time: number) {
+    // 延迟随机数，均衡事件轮询的分布
+    await this.delay(RANDOM_DELAY);
     setInterval(() => this.findAndStartTask(), time);
   }
 

@@ -233,7 +233,10 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
       this._finished_tasks.push(task);
       this._tasks.delete(task.id);
     } else {
-      task.reset(this._workers[0]);
+      // 随机重新分配执行节点
+      const random = Math.floor(Math.random() * 1000);
+      const index = random % this._maxNum;
+      task.reset(this._workers[index]);
     }
   }
 }
