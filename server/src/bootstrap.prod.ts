@@ -3,6 +3,7 @@ import * as nunjucks from "nunjucks";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@global/services/config.service";
+import { ClusterWorker } from "@global/services/worker.service";
 import { MainModule } from "./main.module";
 import { IConfigs } from "./configs/config";
 
@@ -26,6 +27,7 @@ export async function bootstrap({
   staticOptions = {},
 }: Partial<IBootstrapOptions> = {}) {
   const app = await NestFactory.create<NestExpressApplication>(MainModule);
+  app.get(ClusterWorker);
   app
     .get(ConfigService)
     .setConfig(configs)
