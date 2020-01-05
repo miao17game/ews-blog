@@ -56,7 +56,7 @@ export class CoreCompiler implements CompileService<ICompileTask> {
   constructor(protected worker: ClusterWorker) {
     worker.ACTIVE.subscribe(active => {
       if (active) {
-        console.log("start set interval");
+        // console.log("start set interval");
         worker
           .registerTask(TASKID, {
             storage: STORAGEID,
@@ -118,7 +118,7 @@ export class CoreCompiler implements CompileService<ICompileTask> {
         return;
       }
       // console.log("current query worker --> " + this.worker.id);
-      console.log(Object.keys(snapshot.storage).map(l => snapshot.storage[l].status));
+      // console.log(Object.keys(snapshot.storage).map(l => snapshot.storage[l].status));
       const currentList = Object.keys(snapshot.storage || {}).map(k => snapshot.storage[k]);
       const runningTask = currentList.find(i => i.status === CompileTaskStatus.Running);
       if (runningTask) {
