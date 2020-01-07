@@ -5,6 +5,7 @@ import { UserService } from "@global/services/user.service";
 import { CompileService } from "@global/services/compile.service";
 import { CoreCompiler } from "@app/services/core-compile.service";
 import { ConfigService } from "@global/services/config.service";
+import { ClusterWorker } from "@global/services/worker.service";
 import { AppModule } from "@app/app.module";
 
 @Global()
@@ -12,6 +13,7 @@ import { AppModule } from "@app/app.module";
   imports: [AppModule],
   controllers: [],
   providers: [
+    ClusterWorker,
     ConfigService,
     UserService,
     { provide: AuthService, useClass: FakeAuthService },
