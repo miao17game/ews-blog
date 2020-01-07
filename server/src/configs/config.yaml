@@ -13,7 +13,7 @@ configs:
       uri: api
       token: api
       type: redirect
-  redius:
+  redis:
     enabled: false
     host: http://127.0.0.1
     port: 1234

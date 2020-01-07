@@ -8,7 +8,7 @@ export interface IServerConfigs {
     site: { uri: string; token: string; type: string };
     api: { uri: string; token: string; type: string };
   };
-  redius: { enabled: boolean; host: string; port: number };
+  redis: { enabled: boolean; host: string; port: number };
   cluster: { enabled: boolean; maxCpuNum: number | null };
 }
 

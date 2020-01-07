@@ -9,7 +9,7 @@ configs:
       type: redirect
     api:
       uri: http://localhost:4200/api
-  redius:
+  redis:
     enabled: false
     host: http://127.0.0.1
     port: 1234

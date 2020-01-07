@@ -8,7 +8,7 @@ async function load() {
     path.resolve(__dirname, "configs", ENV === "prod" ? "config.yaml" : "config.dev.yaml"),
   );
   process.env.EWS__CONFIGS__PASS = JSON.stringify(configs);
-  if (configs.redius.enabled) {
+  if (configs.redis.enabled) {
     require("./app");
   } else if (configs.cluster.enabled) {
     if (configs.cluster.maxCpuNum !== null) {
