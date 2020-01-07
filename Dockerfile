@@ -32,5 +32,5 @@ RUN npx rimraf client
 
 EXPOSE 3000
 
-CMD ["yarn", "start:prod-cluster"]
+CMD ["yarn", "start:prod"]
 

@@ -1,0 +1,22 @@
+configs:
+  name: ews-server
+  uriGroup:
+    portal:
+      uri: index
+      token: portal
+      type: render
+    site:
+      uri: site
+      token: site
+      type: render
+    api:
+      uri: api
+      token: api
+      type: redirect
+  redius:
+    enabled: false
+    host: http://127.0.0.1
+    port: 1234
+  cluster:
+    enabled: true
+    maxCpuNum: null
