@@ -30,6 +30,11 @@ export class PortalService {
           selected: false,
         },
         {
+          name: "Preview",
+          link: "/portal/preview",
+          selected: false,
+        },
+        {
           name: "Settings",
           link: "/portal/settings",
           selected: false,
