@@ -1,4 +1,13 @@
+<style>
+  :host ::ng-deep iframe {
+    border-width: 0;
+  }
+
+  .start-button {
+    margin-bottom: 8px;
+  }
+</style>
 <app-portal-layout>
-  <button *ngIf="showButton" (click)="onStart()">Start</button>
-  <div #previewHost></div>
+  <button class="start-button" *ngIf="showButton" (click)="onStart()">Start</button>
+  <div class="preview-host-placeholder" #previewHost></div>
 </app-portal-layout>
