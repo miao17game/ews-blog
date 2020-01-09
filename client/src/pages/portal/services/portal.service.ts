@@ -51,6 +51,10 @@ export class PortalService {
     this.http.get("templates");
   }
 
+  public createSource(configs: any) {
+    return this.http.post<{ code: number; data: { source: string } }>("preview", configs);
+  }
+
   public async fetchUserInfos() {
     const userInfo: any = await this.http.get("user");
     if (userInfo.code === 0) {

@@ -4,7 +4,7 @@ import chalk from "chalk";
 import uuid from "uuid/v4";
 import { cloneDeep } from "lodash";
 import { Injectable } from "@nestjs/common";
-import { Factory, GlobalMap, IGlobalMap, IPageCreateOptions } from "@amoebajs/builder";
+import { Factory, GlobalMap, IGlobalMap, IPageCreateOptions, ISourceCreateTranspileOptions } from "@amoebajs/builder";
 import { CompileService, ICommonBuildConfigs, TaskType } from "@global/services/compile.service";
 import { ClusterWorker } from "@global/services/worker.service";
 
@@ -116,8 +116,14 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     return target;
   }
 
-  public async createSourceString(configs: IPageCreateOptions): Promise<string> {
-    const { sourceCode } = await this.builder.createSource({ configs });
+  public async createSourceString(
+    configs: IPageCreateOptions,
+    transpile: Partial<ISourceCreateTranspileOptions> = { enabled: false },
+  ): Promise<string> {
+    const { sourceCode } = await this.builder.createSource({
+      configs,
+      transpile,
+    });
     return sourceCode;
   }
 

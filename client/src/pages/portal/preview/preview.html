@@ -8,6 +8,12 @@
   }
 </style>
 <app-portal-layout>
-  <button class="start-button" *ngIf="showButton" (click)="onStart()">Start</button>
-  <div class="preview-host-placeholder" #previewHost></div>
+  <nz-tabset (nzSelectChange)="onTabChange($event)">
+    <nz-tab nzTitle="Configs">
+      <textarea rows="36" nz-input [(ngModel)]="pageConfigs"></textarea>
+    </nz-tab>
+    <nz-tab nzTitle="Preview">
+      <div class="preview-host-placeholder" #previewHost></div>
+    </nz-tab>
+  </nz-tabset>
 </app-portal-layout>

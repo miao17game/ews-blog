@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { IGlobalMap, IPageCreateOptions } from "@amoebajs/builder";
+import { IGlobalMap, IPageCreateOptions, ISourceCreateTranspileOptions } from "@amoebajs/builder";
 
 export enum TaskType {
   CommonPageBuild = 1,
@@ -17,6 +17,9 @@ export abstract class CompileService<T> {
   public abstract queryPageUri(name: string): string | null;
   public abstract createTask(type: TaskType.PreviewEnvironBuild, configs: {}): Promise<string>;
   public abstract createTask(type: TaskType.CommonPageBuild, configs: ICommonBuildConfigs): Promise<string>;
-  public abstract createSourceString(configs: IPageCreateOptions): Promise<string>;
+  public abstract createSourceString(
+    configs: IPageCreateOptions,
+    transpile?: Partial<ISourceCreateTranspileOptions>,
+  ): Promise<string>;
   public abstract queryTask(id: string): Promise<T | null>;
 }

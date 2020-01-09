@@ -6,7 +6,7 @@ export async function bootstrap(options: Partial<IBootstrapOptions> = {}) {
     staticOptions: { maxAge: 0 },
     beforeListen: app => {
       app.engine("html", useNunjucks(app, { noCache: false }).render);
-      app.enableCors({ origin: "*" });
+      app.enableCors({ origin: "http://localhost:4200", credentials: true });
     },
   });
 }
