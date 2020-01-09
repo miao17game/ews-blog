@@ -1,0 +1,19 @@
+<style>
+  :host ::ng-deep iframe {
+    border-width: 0;
+  }
+
+  .start-button {
+    margin-bottom: 8px;
+  }
+</style>
+<app-portal-layout>
+  <nz-tabset (nzSelectChange)="onTabChange($event)">
+    <nz-tab nzTitle="Configs">
+      <textarea rows="36" nz-input [(ngModel)]="pageConfigs"></textarea>
+    </nz-tab>
+    <nz-tab nzTitle="Preview">
+      <div class="preview-host-placeholder" #previewHost></div>
+    </nz-tab>
+  </nz-tabset>
+</app-portal-layout>

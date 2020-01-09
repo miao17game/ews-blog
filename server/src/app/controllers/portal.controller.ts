@@ -11,7 +11,7 @@ export class PortalController {
 
   @Get(["", "/*", "/**/*"])
   getIndex(@Response() resp: Resp) {
-    const config = this.configs.getConfig();
+    const config = this.configs.getConfig().uriGroup;
     if (config.portal.type === "redirect") {
       return resp.redirect(config.portal.uri);
     }

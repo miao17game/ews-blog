@@ -4,8 +4,8 @@ import chalk from "chalk";
 import uuid from "uuid/v4";
 import { cloneDeep } from "lodash";
 import { Injectable } from "@nestjs/common";
-import { Factory, GlobalMap, IGlobalMap, IPageCreateOptions } from "@amoebajs/builder";
-import { CompileService } from "@global/services/compile.service";
+import { Factory, GlobalMap, IGlobalMap, IPageCreateOptions, ISourceCreateTranspileOptions } from "@amoebajs/builder";
+import { CompileService, ICommonBuildConfigs, TaskType } from "@global/services/compile.service";
 import { ClusterWorker } from "@global/services/worker.service";
 
 export enum CompileTaskStatus {
@@ -18,6 +18,7 @@ export enum CompileTaskStatus {
 export interface ICompileTask {
   id: string;
   name: string;
+  type: TaskType;
   status: CompileTaskStatus;
   configs: IPageCreateOptions;
   creator: number;
@@ -82,17 +83,27 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     return !hash ? null : `website/${name}.${hash.latest}.html`;
   }
 
-  public async createTask(name: string, configs: IPageCreateOptions): Promise<string> {
-    const task: ICompileTask = {
-      id: createTaskID(),
-      name,
-      status: CompileTaskStatus.Pending,
-      configs,
-      creator: this.worker.id,
-      operator: -1,
-    };
-    await this.worker.updateTask(TASKID, { insert: [[task.id, task]] });
-    return task.id;
+  public createTask(type: TaskType.PreviewEnvironBuild, configs: {}): Promise<string>;
+  public createTask(type: TaskType.CommonPageBuild, configs: ICommonBuildConfigs): Promise<string>;
+  public async createTask(type: any, configs: any): Promise<string> {
+    if (type === TaskType.CommonPageBuild) {
+      const { name, options } = configs;
+      const task: ICompileTask = {
+        id: createTaskID(),
+        name,
+        type,
+        status: CompileTaskStatus.Pending,
+        configs: options,
+        creator: this.worker.id,
+        operator: -1,
+      };
+      await this.worker.updateTask(TASKID, { insert: [[task.id, task]] });
+      return task.id;
+    }
+    if (type === TaskType.PreviewEnvironBuild) {
+      throw new Error("not implemented.");
+    }
+    throw new Error("no type is selected for core-compiler");
   }
 
   public async queryTask(id: string): Promise<ICompileTask | null> {
@@ -105,18 +116,25 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     return target;
   }
 
-  public async createSourceString(configs: IPageCreateOptions): Promise<string> {
-    const { sourceCode } = await this.builder.createSource({ configs });
+  public async createSourceString(
+    configs: IPageCreateOptions,
+    transpile: Partial<ISourceCreateTranspileOptions> = { enabled: false },
+  ): Promise<string> {
+    const { sourceCode } = await this.builder.createSource({
+      configs,
+      transpile,
+    });
     return sourceCode;
   }
 
   protected async findAndStartTask() {
+    const worker = this.worker;
     try {
-      const snapshot = await this.worker.queryTaskStatus<ICompileStorage>(TASKID);
+      const snapshot = await worker.queryTaskStatus<ICompileStorage>(TASKID);
       // console.log("current snapshot operator --> " + snapshot.operator);
-      // console.log("current query worker --> " + this.worker.id);
+      // console.log("current query worker --> " + worker.id);
       // 非当前worker操作的任务，退出
-      if (snapshot.operator !== this.worker.id) {
+      if (snapshot.operator !== worker.id) {
         return;
       }
       // console.log(Object.keys(snapshot.storage).map(l => snapshot.storage[l].status));
@@ -124,10 +142,10 @@ export class CoreCompiler implements CompileService<ICompileTask> {
       const runningTask = currentList.find(i => i.status === CompileTaskStatus.Running);
       if (runningTask) {
         // 上一轮执行节点已经离线，需要重置任务状态
-        if (runningTask.operator !== this.worker.id) {
+        if (runningTask.operator !== worker.id) {
           runningTask.status = CompileTaskStatus.Pending;
-          runningTask.operator = this.worker.id;
-          await this.worker.updateTask(TASKID, { update: [[runningTask.id, runningTask]] });
+          runningTask.operator = worker.id;
+          await worker.updateTask(TASKID, { update: [[runningTask.id, runningTask]] });
         }
         return;
       }
@@ -138,23 +156,31 @@ export class CoreCompiler implements CompileService<ICompileTask> {
       }
       const task = currentList[firstPending];
       task.status = CompileTaskStatus.Running;
-      task.operator = this.worker.id;
-      await this.worker.updateTask(TASKID, { update: [[task.id, task]] });
+      task.operator = worker.id;
+      await worker.updateTask(TASKID, { update: [[task.id, task]] });
+      await this.runCustomTask(task);
+      await worker.updateTask(TASKID, { update: [[task.id, task]] });
+      await worker.finishTask(TASKID);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  private async runCustomTask(task: ICompileTask) {
+    if (task.type === TaskType.CommonPageBuild) {
       const tempSrcDir = getSrcDir(task.id);
       const tempBuildDir = getBuildDir(task.id);
       const exist = await fs.pathExists(tempSrcDir);
       if (!exist) {
         fs.mkdirSync(tempSrcDir, { recursive: true });
       }
-      await this.startWork(task, tempSrcDir, tempBuildDir);
-      await this.worker.updateTask(TASKID, { update: [[task.id, task]] });
-      await this.worker.finishTask(TASKID);
-    } catch (error) {
-      console.log(error);
+      await this.runCommonBuildWorkAsync(task, tempSrcDir, tempBuildDir);
+    } else {
+      throw new Error("other task types are not implemented.");
     }
   }
 
-  protected async startWork(task: ICompileTask, srcDir: string, buildDir: string) {
+  protected async runCommonBuildWorkAsync(task: ICompileTask, srcDir: string, buildDir: string) {
     const stamp = new Date().getTime();
     const filehash = (this._hash[task.name] = this._hash[task.name] || { latest: "", files: {} });
     try {

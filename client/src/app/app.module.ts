@@ -4,7 +4,6 @@ import { CommonModule, registerLocaleData } from "@angular/common";
 import { BrowserModule } from "@angular/platform-browser";
 import { HttpClientModule } from "@angular/common/http";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { FormsModule } from "@angular/forms";
 import { NZ_I18N, en_US as enUS } from "ng-zorro-antd";
 import { CoreService } from "../services/core.service";
 import { HttpService } from "../services/http.service";
@@ -16,15 +15,7 @@ registerLocaleData(LOCALES_EN);
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [
-    BrowserModule,
-    CommonModule,
-    HttpClientModule,
-    BrowserAnimationsModule,
-    FormsModule,
-    CommonsModule,
-    RoutesModule,
-  ],
+  imports: [BrowserModule, CommonModule, HttpClientModule, BrowserAnimationsModule, CommonsModule, RoutesModule],
   providers: [{ provide: NZ_I18N, useValue: enUS }, CoreService, HttpService],
   bootstrap: [AppComponent],
 })

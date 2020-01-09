@@ -1,12 +1,12 @@
 import cluster from "cluster";
 import os from "os";
 import {
-  IWorkerSendMsg,
-  IWorkRegisterTaskCompletedReceiveMsg,
-  IWorkerQueryTaskReceiveMsg,
   IWorkActiveReceiveMsg,
-  IWorkerRunTaskReceiveMsg,
+  IWorkRegisterTaskCompletedReceiveMsg,
   IWorkerFinishTaskReceiveMsg,
+  IWorkerQueryTaskReceiveMsg,
+  IWorkerRunTaskReceiveMsg,
+  IWorkerSendMsg,
   IWorkerUpdateTaskReceiveMsg,
   IWorkerUpdateTaskSendMsg,
 } from "./message";
@@ -45,7 +45,7 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
   }
 
   protected initWorkers() {
-    for (var i = 0; i < this._maxNum; i++) {
+    for (let i = 0; i < this._maxNum; i++) {
       this._god.fork();
     }
   }

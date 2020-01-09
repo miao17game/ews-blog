@@ -3,7 +3,7 @@ type IEnv = "prod" | "dev";
 async function start() {
   const ENV: IEnv = process.env.NODE_ENV === "production" ? "prod" : "dev";
   const options: Partial<import("./bootstrap.prod").IBootstrapOptions> = {
-    configs: getConfigs(ENV),
+    configs: JSON.parse(process.env.EWS__CONFIGS__PASS),
     ewsEnvs: getEnvs(),
   };
   if (ENV === "prod") {
@@ -11,13 +11,6 @@ async function start() {
   } else {
     (await import("./bootstrap.dev")).bootstrap(options);
   }
-}
-
-function getConfigs(env: IEnv) {
-  if (env === "prod") {
-    return require("./configs/config").configs;
-  }
-  return require("./configs/config.dev").configs;
 }
 
 function getEnvs() {
