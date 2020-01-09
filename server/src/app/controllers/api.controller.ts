@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Query } from "@nestjs/common";
-import { CompileService } from "@global/services/compile.service";
+import { CompileService, TaskType } from "@global/services/compile.service";
 import { UserService } from "@global/services/user.service";
 import { SetRoles, UseRolesAuthentication } from "@utils/roles";
 import { ICompileTask } from "../services/core-compile.service";
@@ -33,8 +33,12 @@ export class ApiController {
     console.log("create preview ==> ");
     console.log(data);
     const { name, ...others } = data;
-    const source = await this.compiler.createSourceString(others);
-    console.log(source);
+    const source = await this.compiler.createSourceString(others, {
+      enabled: true,
+      jsx: "react",
+      target: "es2015",
+      module: "es2015",
+    });
     return {
       code: 0,
       data: {
@@ -47,11 +51,11 @@ export class ApiController {
 
   @Post("task")
   @SetRoles("super-admin")
-  public createtask(@Body() data: any) {
+  public async createtask(@Body() data: any) {
     console.log("create task ==> ");
     console.log(data);
-    const { name, ...others } = data;
-    const id = this.compiler.createtask(name, others);
+    const { name, ...options } = data;
+    const id = await this.compiler.createTask(TaskType.CommonPageBuild, { name, options });
     return {
       code: 0,
       data: {
@@ -63,9 +67,9 @@ export class ApiController {
 
   @Get("task")
   @SetRoles("admin")
-  public gettask(@Query("id") id: string) {
+  public async gettask(@Query("id") id: string) {
     console.log("query task ==> " + id);
-    const result = this.compiler.queryTask(id);
+    const result = await this.compiler.queryTask(id);
     console.log(result);
     if (!result) {
       return {

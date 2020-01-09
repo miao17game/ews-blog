@@ -6,7 +6,7 @@
   "contributors": [
     "bigmogician <bigmogician@outlook.com>"
   ],
-  "license": "Apache License 2.0",
+  "license": "AGPL-3.0-only",
   "private": true,
   "scripts": {
     "install:client": "cd client && yarn install",
