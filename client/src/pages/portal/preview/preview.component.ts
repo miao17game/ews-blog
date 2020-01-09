@@ -56,7 +56,7 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
     if (e.index === 1) {
       try {
         const configs = JSON.parse(this.pageConfigs);
-        const result = await this.portal.createSource(configs);
+        const result = await this.portal.createSource("yaml", configs);
         if (this.vm) {
           this.vm.applyFsDiff({
             create: {

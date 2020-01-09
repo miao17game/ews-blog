@@ -1,3 +1,4 @@
+import yamljs from "js-yaml";
 import { Body, Controller, Get, Post, Query } from "@nestjs/common";
 import { CompileService, TaskType } from "@global/services/compile.service";
 import { UserService } from "@global/services/user.service";
@@ -32,8 +33,9 @@ export class ApiController {
   public async createSourcePreview(@Body() data: any) {
     console.log("create preview ==> ");
     console.log(data);
-    const { name, ...others } = data;
-    const source = await this.compiler.createSourceString(others, {
+    const { type, configs: others } = data;
+    const configs = type === "json" ? others : yamljs.safeLoad(others);
+    const source = await this.compiler.createSourceString(configs, {
       enabled: true,
       jsx: "react",
       target: "es2015",
@@ -43,7 +45,6 @@ export class ApiController {
       code: 0,
       data: {
         source,
-        name,
         configs: data,
       },
     };
