@@ -13,6 +13,7 @@
   },
   "private": true,
   "dependencies": {
+    "@amoebajs/builder-websdk": "0.0.2-alpha.1578124698431",
     "@angular/animations": "~8.2.13",
     "@angular/common": "~8.2.13",
     "@angular/compiler": "~8.2.13",
@@ -31,9 +32,9 @@
     "@angular/cli": "~8.3.18",
     "@angular/compiler-cli": "~8.2.13",
     "@angular/language-service": "~8.2.13",
-    "@types/node": "~8.9.4",
     "@types/jasmine": "~3.3.8",
     "@types/jasminewd2": "~2.0.3",
+    "@types/node": "~8.9.4",
     "codelyzer": "^5.0.0",
     "jasmine-core": "~3.4.0",
     "jasmine-spec-reporter": "~4.2.1",
@@ -46,5 +47,13 @@
     "ts-node": "~7.0.0",
     "tslint": "~5.15.0",
     "typescript": "~3.5.3"
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false,
+    "child_process": false,
+    "console": false,
+    "module": false
   }
 }
