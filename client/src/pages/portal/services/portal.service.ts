@@ -52,7 +52,7 @@ export class PortalService {
   }
 
   public createSource(type: "json" | "yaml", configs: any) {
-    return this.http.post<{ code: number; data: { source: string } }>("preview", { type, configs });
+    return this.http.post<{ code: number; data: { source: string } }>("preview", { configs });
   }
 
   public async fetchUserInfos() {

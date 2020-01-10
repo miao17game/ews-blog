@@ -1,4 +1,5 @@
 import SDK from "@stackblitz/sdk";
+import yamljs from "js-yaml";
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from "@angular/core";
 import { NzMessageService, NzTabChangeEvent } from "ng-zorro-antd";
 import { Project } from "@stackblitz/sdk/typings/interfaces";
@@ -55,7 +56,7 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
   async onTabChange(e: NzTabChangeEvent) {
     if (e.index === 1) {
       try {
-        const configs = JSON.parse(this.pageConfigs);
+        const configs = JSON.parse(yamljs.safeLoad(this.pageConfigs));
         const result = await this.portal.createSource("yaml", configs);
         if (this.vm) {
           this.vm.applyFsDiff({
