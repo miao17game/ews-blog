@@ -6,11 +6,8 @@
   "license": "MIT",
   "scripts": {
     "prebuild": "rimraf dist",
-    "run:fix": "node scripts/nestcli-fix",
     "build": "nest build && yarn copy:prod",
-    "build:fix": "yarn build && yarn run:fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start:fix": "yarn build:fix && yarn start:prod",
     "start:dev": "yarn copy:dev && cross-env NODE_ENV=dev nest start --watch",
     "start:debug": "yarn copy:dev && cross-env NODE_ENV=dev nest start --debug --watch",
     "start:prod": "cross-env NODE_ENV=production node -r ./scripts/tsconfig-paths dist/main",
@@ -38,7 +35,7 @@
     "rxjs": "^6.5.3"
   },
   "devDependencies": {
-    "@nestjs/cli": "^6.9.0",
+    "@nestjs/cli": "^6.13.1",
     "@nestjs/schematics": "^6.7.0",
     "@nestjs/testing": "^6.7.1",
     "@types/express": "^4.17.2",
