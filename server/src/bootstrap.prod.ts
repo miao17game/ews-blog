@@ -3,8 +3,8 @@ import * as nunjucks from "nunjucks";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@global/services/config.service";
+import { ClusterWorker } from "@global/services/worker.service";
 import { MainModule } from "./main.module";
-import { IConfigs } from "./configs/config";
 
 export const BUILD_ROOT = path.join(__dirname, "..", "build");
 export const ASSETS_ROOT = path.join(__dirname, "assets");
@@ -13,7 +13,7 @@ const noopPromise = (app: any) => Promise.resolve(app);
 type OnInitHook<T> = (app: T) => void | Promise<void>;
 
 export interface IBootstrapOptions {
-  configs: IConfigs;
+  configs: any;
   ewsEnvs: { [prop: string]: string };
   staticOptions: import("@nestjs/platform-express/interfaces/serve-static-options.interface").ServeStaticOptions;
   beforeListen: OnInitHook<NestExpressApplication>;
@@ -26,6 +26,7 @@ export async function bootstrap({
   staticOptions = {},
 }: Partial<IBootstrapOptions> = {}) {
   const app = await NestFactory.create<NestExpressApplication>(MainModule);
+  app.get(ClusterWorker);
   app
     .get(ConfigService)
     .setConfig(configs)

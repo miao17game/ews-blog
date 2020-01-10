@@ -30,6 +30,11 @@ export class PortalService {
           selected: false,
         },
         {
+          name: "Preview",
+          link: "/portal/preview",
+          selected: false,
+        },
+        {
           name: "Settings",
           link: "/portal/settings",
           selected: false,
@@ -44,6 +49,10 @@ export class PortalService {
 
   public fetchTemplates() {
     this.http.get("templates");
+  }
+
+  public createSource(type: "json" | "yaml", configs: any) {
+    return this.http.post<{ code: number; data: { source: string } }>("preview", { configs });
   }
 
   public async fetchUserInfos() {
