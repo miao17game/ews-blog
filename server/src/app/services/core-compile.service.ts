@@ -2,11 +2,12 @@ import * as path from "path";
 import * as fs from "fs-extra";
 import chalk from "chalk";
 import uuid from "uuid/v4";
-import { cloneDeep } from "lodash";
+// import { cloneDeep } from "lodash";
 import { Injectable } from "@nestjs/common";
-import { Factory, GlobalMap, IGlobalMap, IPageCreateOptions, ISourceCreateTranspileOptions } from "@amoebajs/builder";
+import { IPageCreateOptions, ISourceCreateTranspileOptions } from "@amoebajs/builder";
 import { CompileService, ICommonBuildConfigs, TaskType } from "@global/services/compile.service";
 import { ClusterWorker } from "@global/services/worker.service";
+import { BuilderFactory } from "../../core";
 
 export enum CompileTaskStatus {
   Pending,
@@ -47,9 +48,9 @@ const STORAGEID = "storage::core-compile-work";
 
 @Injectable()
 export class CoreCompiler implements CompileService<ICompileTask> {
-  private _factory = new Factory();
+  private _factory = new BuilderFactory();
   private _hash: IWebsitePageHash = {};
-  private _mapCache!: IGlobalMap;
+  // private _mapCache!: IGlobalMap;
 
   private get builder() {
     return this._factory.builder;
@@ -74,8 +75,12 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     });
   }
 
-  public getTemplateGroup(): IGlobalMap {
-    return this._mapCache || (this._mapCache = cloneDeep(this._factory.builder.get(GlobalMap).maps));
+  // public getTemplateGroup(): IGlobalMap {
+  //   return this._mapCache || (this._mapCache = cloneDeep(this._factory.builder.get(GlobalMap).maps));
+  // }
+
+  public getTemplateGroup(): any {
+    return {};
   }
 
   public queryPageUri(name: string) {
@@ -186,7 +191,7 @@ export class CoreCompiler implements CompileService<ICompileTask> {
     try {
       const targetFile = path.join(srcDir, "main.tsx");
       console.log(chalk.blue(`[COMPILE-TASK] task[${task.id}] is now running.`));
-      const { sourceCode, depsJSON } = await this.builder.createSource({
+      const { sourceCode, dependencies } = await this.builder.createSource({
         configs: task.configs,
       });
       await fs.writeFile(targetFile, sourceCode, { encoding: "utf8", flag: "w+" });
@@ -199,7 +204,7 @@ export class CoreCompiler implements CompileService<ICompileTask> {
         typescript: { tsconfig: getTsconfigFile() },
         sandbox: {
           rootPath: getNpmSandbox(),
-          dependencies: JSON.parse(depsJSON),
+          dependencies,
         },
       });
       let shouldMoveBundle = true;
