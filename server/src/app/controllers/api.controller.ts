@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Query } from "@nestjs/common";
-import { CompileService, TaskType } from "@global/services/compile.service";
-import { UserService } from "@global/services/user.service";
-import { SetRoles, UseRolesAuthentication } from "@utils/roles";
+import { CompileService, TaskType } from "#global/services/compile.service";
+import { UserService } from "#global/services/user.service";
+import { SetRoles, UseRolesAuthentication } from "#utils/roles";
 import { ICompileTask } from "../services/core-compile.service";
 
 @Controller("api")

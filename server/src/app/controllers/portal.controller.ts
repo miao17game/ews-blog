@@ -1,8 +1,8 @@
 import { Response as Resp } from "express";
 import { Controller, Get, Response } from "@nestjs/common";
-import { ConfigService } from "@global/services/config.service";
-import { UserService } from "@global/services/user.service";
-import { UseRolesAuthentication } from "@utils/roles";
+import { ConfigService } from "#global/services/config.service";
+import { UserService } from "#global/services/user.service";
+import { UseRolesAuthentication } from "#utils/roles";
 
 @Controller("portal")
 @UseRolesAuthentication({ roles: ["admin"] })

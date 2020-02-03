@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, ForbiddenException, HttpException } from "@nestjs/common";
 import { Request, Response } from "express";
-import { AuthService } from "@global/services/auth.service";
-import { UserService } from "@global/services/user.service";
+import { AuthService } from "#global/services/auth.service";
+import { UserService } from "#global/services/user.service";
 
 @Catch(ForbiddenException)
 export class ForbiddenExceptionFilter implements ExceptionFilter {

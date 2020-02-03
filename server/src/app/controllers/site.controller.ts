@@ -1,7 +1,7 @@
 import { Response as Resp } from "express";
 import { Controller, Get, Param, Response } from "@nestjs/common";
-import { ConfigService } from "@global/services/config.service";
-import { CompileService } from "@global/services/compile.service";
+import { ConfigService } from "#global/services/config.service";
+import { CompileService } from "#global/services/compile.service";
 import { ICompileTask } from "../services/core-compile.service";
 
 @Controller("site")

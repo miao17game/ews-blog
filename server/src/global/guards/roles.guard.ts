@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, Scope } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Observable } from "rxjs";
-import { ROLES_GUARD__CLASS_ROLES, ROLES_GUARD__ROLES } from "@utils/roles";
+import { ROLES_GUARD__CLASS_ROLES, ROLES_GUARD__ROLES } from "#utils/roles";
 import { AuthService } from "../services/auth.service";
 
 @Injectable({ scope: Scope.REQUEST })

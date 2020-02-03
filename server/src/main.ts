@@ -1,5 +1,5 @@
 import path from "path";
-import { resolveYamlFile } from "@utils/yaml";
+import { resolveYamlFile } from "#utils/yaml";
 
 const ENV = process.env.NODE_ENV === "production" ? "prod" : "dev";
 

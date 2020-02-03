@@ -2,8 +2,8 @@ import * as path from "path";
 import * as nunjucks from "nunjucks";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
-import { ConfigService } from "@global/services/config.service";
-import { ClusterWorker } from "@global/services/worker.service";
+import { ConfigService } from "#global/services/config.service";
+import { ClusterWorker } from "#global/services/worker.service";
 import { MainModule } from "./main.module";
 
 export const BUILD_ROOT = path.join(__dirname, "..", "build");

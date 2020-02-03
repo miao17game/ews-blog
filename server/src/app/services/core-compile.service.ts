@@ -5,8 +5,8 @@ import uuid from "uuid/v4";
 // import { cloneDeep } from "lodash";
 import { Injectable } from "@nestjs/common";
 import { IPageCreateOptions, ISourceCreateTranspileOptions } from "@amoebajs/builder";
-import { CompileService, ICommonBuildConfigs, TaskType } from "@global/services/compile.service";
-import { ClusterWorker } from "@global/services/worker.service";
+import { CompileService, ICommonBuildConfigs, TaskType } from "#global/services/compile.service";
+import { ClusterWorker } from "#global/services/worker.service";
 import { BuilderFactory } from "../../core";
 
 export enum CompileTaskStatus {
