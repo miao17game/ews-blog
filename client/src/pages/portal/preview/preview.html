@@ -6,14 +6,46 @@
   .start-button {
     margin-bottom: 8px;
   }
+
+  .buttons-group {
+    display: flex;
+    margin-bottom: 12px;
+  }
+
+  .button-item {
+    margin-right: 12px;
+  }
+
+  .editor-group {
+    display: flex;
+  }
+
+  .editor-column {
+    flex: 1;
+    transform: scaleX(1);
+  }
+
+  .editor-column-hidden {
+    flex: 0;
+    width: 0;
+    transform: scaleX(0);
+  }
 </style>
 <app-portal-layout>
-  <nz-tabset (nzSelectChange)="onTabChange($event)">
-    <nz-tab nzTitle="Configs">
-      <textarea rows="36" nz-input [(ngModel)]="pageConfigs"></textarea>
-    </nz-tab>
-    <nz-tab nzTitle="Preview">
+  <div class="buttons-group">
+    <button class="button-item" nz-button [nzType]="showEditor?'primary':'default'" (click)="onEditorClick()">
+      Configs
+    </button>
+    <button class="button-item" nz-button [nzType]="showPreview?'primary':'default'" (click)="onPreviewClick()">
+      Preview
+    </button>
+  </div>
+  <div class="editor-group">
+    <div [class.editor-column-hidden]="!showEditor" class="editor-column">
+      <textarea rows="36" nz-input [(ngModel)]="pageConfigs" (ngModelChange)="onTextareaChange($event)"></textarea>
+    </div>
+    <div [class.editor-column-hidden]="!showPreview" class="editor-column">
       <div class="preview-host-placeholder" #previewHost></div>
-    </nz-tab>
-  </nz-tabset>
+    </div>
+  </div>
 </app-portal-layout>
