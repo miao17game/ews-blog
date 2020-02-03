@@ -14,5 +14,5 @@ configs:
     host: http://127.0.0.1
     port: 1234
   cluster:
-    enabled: true
+    enabled: false
     maxCpuNum: 1

@@ -53,7 +53,7 @@ export class ApiController {
   public async createtask(@Body() data: any) {
     console.log("create task ==> ");
     console.log(data);
-    const { name, ...options } = data;
+    const { name, configs: options } = data;
     const id = await this.compiler.createTask(TaskType.CommonPageBuild, { name, options });
     return {
       code: 0,
