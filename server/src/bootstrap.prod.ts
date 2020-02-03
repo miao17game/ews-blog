@@ -32,7 +32,7 @@ export async function bootstrap({
     .setConfig(configs)
     .setEnv(ewsEnvs);
   app.useStaticAssets(BUILD_ROOT, { maxAge: 3600000, ...staticOptions });
-  app.engine("html", useNunjucks(app, { noCache: true }).render);
+  app.engine("html", useNunjucks(app, { noCache: false }).render);
   app.setViewEngine("html");
   await onInit(app);
   await app.listen(3000);
