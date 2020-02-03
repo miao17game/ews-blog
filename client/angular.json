@@ -33,7 +33,7 @@
               }
             ],
             "styles": ["src/styles.scss", "./node_modules/ng-zorro-antd/ng-zorro-antd.min.css"],
-            "scripts": []
+            "scripts": ["../websdk/index.js"]
           },
           "configurations": {
             "production": {

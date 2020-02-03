@@ -11,18 +11,24 @@
   "scripts": {
     "install:client": "cd client && yarn install",
     "install:server": "cd server && yarn install",
-    "install:all": "yarn && yarn install:client && yarn install:server",
-    "start": "cd server && yarn start --watch",
-    "start:fix": "cd server && yarn start:fix",
+    "install:all": "yarn && yarn install:client && yarn install:server && yarn build:websdk",
+    "start": "cd server && yarn start",
+    "start:watch": "cd server && yarn start --watch",
     "start:prod": "cd server && yarn start:prod",
     "dev": "cd client && yarn start",
+    "build:websdk": "node scripts/build-sdk.js",
     "build:server": "cd server && yarn build",
     "build:client": "cd client && yarn build",
     "build": "yarn build:client && yarn build:server",
     "postbuild": "npx rimraf server/build && npx copy client/dist/**/*.* server/build",
     "docker:build": "node scripts/docker.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "chalk": "^3.0.0",
+    "ts-loader": "^6.2.1",
+    "webpack": "^4.41.2",
+    "webpack-bundle-analyzer": "^3.6.0"
+  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.14.0",
     "@typescript-eslint/parser": "^2.14.0",
