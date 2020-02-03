@@ -7,7 +7,7 @@ import { Injectable } from "@nestjs/common";
 import { IPageCreateOptions, ISourceCreateTranspileOptions } from "@amoebajs/builder";
 import { CompileService, ICommonBuildConfigs, TaskType } from "#global/services/compile.service";
 import { ClusterWorker } from "#global/services/worker.service";
-import { BuilderFactory } from "../../core";
+import { BuilderFactory } from "#core/index";
 
 export enum CompileTaskStatus {
   Pending,

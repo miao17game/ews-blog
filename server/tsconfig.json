@@ -16,6 +16,7 @@
     "paths": {
       "#global/*": ["./src/global/*"],
       "#app/*": ["./src/app/*"],
+      "#core/*": ["./src/core/*"],
       "#assets/*": ["./src/assets/*"],
       "#configs/*": ["./src/configs/*"],
       "#utils/*": ["./src/utils/*"]
