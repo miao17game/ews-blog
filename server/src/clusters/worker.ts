@@ -1,4 +1,4 @@
-import { ITaskSnapshot } from "./task";
+import { ITaskSnapshot, Task, TaskManager } from "./task";
 import {
   IWorkActiveReceiveMsg,
   IWorkRegisterTaskCompletedReceiveMsg,
@@ -13,12 +13,23 @@ import {
   IWorkerRunTaskSendMsg,
   IWorkerUpdateTaskReceiveMsg,
   IWorkerUpdateTaskSendMsg,
+  IWorkerSendMsg,
 } from "./message";
+import { ClusterStorage } from "./storage";
+
+const FakeRels: Record<IWorkerSendMsg["type"], IWorkerReceiveMsg["type"]> = {
+  init: "active",
+  "register-task": "register-completed",
+  "query-task": "query-task-result",
+  "run-task": "run-task-result",
+  "update-task": "update-task-result",
+  "finish-task": "finish-task-result",
+};
 
 /**
  * ## Worker 执行节点
  */
-export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
+export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> extends TaskManager {
   public static Create() {
     return new Worker();
   }
@@ -41,7 +52,12 @@ export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
     return this._target.pid;
   }
 
+  public get hasMaster() {
+    return "send" in this._target;
+  }
+
   constructor() {
+    super();
     this.initWorker();
   }
 
@@ -89,7 +105,7 @@ export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
   }
 
   public runTask(taskid: string) {
-    this._target.send(<IWorkerRunTaskSendMsg>{
+    this.send<IWorkerRunTaskSendMsg>({
       type: "run-task",
       taskid,
     });
@@ -107,7 +123,7 @@ export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
     },
   ) {
     const { delete: del = [], insert = [], update = [] } = kvs;
-    this._target.send(<IWorkerUpdateTaskSendMsg>{
+    this.send<IWorkerUpdateTaskSendMsg>({
       type: "update-task",
       taskid,
       changes: {
@@ -157,8 +173,57 @@ export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
     }
   }
 
-  protected send<D>(data: D) {
-    return this._target.send(data);
+  protected onMessageReceivedMock<D extends IWorkerSendMsg>(data: D) {
+    const sendType = data.type;
+    const type = FakeRels[sendType];
+    switch (type) {
+      case "active":
+        this.resolveOnActive({ type, master: null });
+        break;
+      case "register-completed":
+        const { taskid: createid, infos, autoreset, storage } = <IWorkerRegisterTaskSendMsg>data;
+        const exist = this._createNewTask(createid, infos, autoreset, storage, this._target.pid);
+        this.resolveTaskRegister({ type, exist, taskid: createid });
+        break;
+      case "query-task-result":
+        const { taskid: queryid } = <IWorkerQueryTaskSendMsg>data;
+        const [isExist, task, s] = this._queryTaskExist(queryid);
+        this.resolveQueryTask({
+          type,
+          exist: isExist,
+          taskid: queryid,
+          snapshot: { ...(task?.getTaskSnapshot() || {}), storage: s },
+        });
+        break;
+      case "run-task-result":
+        const { taskid: runid } = <IWorkerRunTaskSendMsg>data;
+        const [success, hasControl] = this._runExistTask(runid, this._target.pid);
+        this.resolveRunTask({ type, success, control: hasControl, taskid: runid });
+        break;
+      case "finish-task-result":
+        const { taskid: finishid } = <IWorkerFinishTaskSendMsg>data;
+        this.resolveFinishTask({
+          type,
+          taskid: finishid,
+          success: this._finishTheTask(finishid, this._target.pid, task => this._clearFinishedTask(task)),
+        });
+        break;
+      case "update-task-result":
+        const { taskid: updateid, changes } = <IWorkerUpdateTaskSendMsg>data;
+        this.resolveUpdateTask({ type, taskid: updateid, success: this._updateExisttask(updateid, changes) });
+        break;
+      default:
+        break;
+    }
+  }
+
+  protected send<D extends IWorkerSendMsg>(data: D) {
+    if (this.hasMaster) {
+      return this._target.send(data);
+    } else {
+      setImmediate(() => this.onMessageReceivedMock(data));
+      return true;
+    }
   }
 
   private resolveOnActive(data: IWorkActiveReceiveMsg) {
@@ -184,5 +249,13 @@ export class Worker<T extends IWorkerReceiveMsg = IWorkerReceiveMsg> {
 
   private resolveFinishTask(data: IWorkerFinishTaskReceiveMsg) {
     this._finishList.filter(i => i[0] === data.taskid).forEach(task => task[1](data.success));
+  }
+
+  private _clearFinishedTask(task: Task) {
+    if (!task.autoReset) {
+      this._clearFinishedTaskAction(task);
+    } else {
+      this._resetFinishedTaskAction(task, this._target.pid);
+    }
   }
 }

@@ -10,7 +10,7 @@ import {
   IWorkerUpdateTaskReceiveMsg,
   IWorkerUpdateTaskSendMsg,
 } from "./message";
-import { Task } from "./task";
+import { Task, TaskManager } from "./task";
 import { ClusterStorage } from "./storage";
 
 export interface IMasterOptions {
@@ -20,7 +20,7 @@ export interface IMasterOptions {
 /**
  * ## Master 主机
  */
-export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
+export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> extends TaskManager {
   public static Create(god: typeof cluster, options: IMasterOptions = {}) {
     return new Master(god, options);
   }
@@ -28,11 +28,9 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
   private _target = process;
   private _maxNum = os.cpus().length;
   private _workers: number[] = [];
-  private _storages: Map<string, ClusterStorage<any>> = new Map();
-  private _tasks: Map<string, Task> = new Map();
-  private _finished_tasks: Task[] = [];
 
   constructor(private _god: typeof cluster, options: IMasterOptions = {}) {
+    super();
     this.init(options);
   }
 
@@ -121,55 +119,25 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
   }
 
   private _createTask(id: string, infos: any, autorestart: boolean, storage: string | false, worker: cluster.Worker) {
-    let exist = this._tasks.get(id);
-    let existed = true;
-    if (!exist) {
-      existed = false;
-      exist = new Task(id, worker.process.pid, autorestart);
-      if (storage !== false) {
-        exist.setStorage(storage);
-        const existSto = this._storages.get(storage);
-        if (existSto) {
-          existSto.updateStorage(infos);
-        } else {
-          this._storages.set(storage, new ClusterStorage(storage).updateStorage(infos));
-        }
-      }
-      this._tasks.set(id, exist);
-    }
     this.send<IWorkRegisterTaskCompletedReceiveMsg>(worker, {
       type: "register-completed",
-      exist: existed,
+      exist: this._createNewTask(id, infos, autorestart, storage, worker.process.pid),
       taskid: id,
     });
   }
 
   private _queryTask(id: string, worker: cluster.Worker) {
-    const exist = this._tasks.get(id);
-    let storage: any = {};
-    if (exist) {
-      const sto = this._storages.get(exist.storageName);
-      storage = sto?.data || {};
-    }
+    const [exist, task, storage] = this._queryTaskExist(id);
     this.send<IWorkerQueryTaskReceiveMsg>(worker, {
       type: "query-task-result",
       exist: !!exist,
-      snapshot: { ...(exist?.getTaskSnapshot() || {}), storage },
+      snapshot: { ...(task?.getTaskSnapshot() || {}), storage },
       taskid: id,
     });
   }
 
   private _runTask(taskid: string, worker: cluster.Worker) {
-    const task = this._tasks.get(taskid);
-    let hasControl = false;
-    let success = false;
-    if (task) {
-      success = true;
-      if (!task.locked) {
-        task.lockTask(worker.process.pid);
-        hasControl = true;
-      }
-    }
+    const [success, hasControl] = this._runExistTask(taskid, worker.process.pid);
     this.send<IWorkerRunTaskReceiveMsg>(worker, {
       type: "run-task-result",
       control: hasControl,
@@ -179,39 +147,15 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
   }
 
   private _updateTask(taskid: string, changes: IWorkerUpdateTaskSendMsg["changes"], worker: cluster.Worker) {
-    const task = this._tasks.get(taskid);
-    let success = false;
-    if (task) {
-      const existSto = this._storages.get(task.storageName);
-      if (existSto) {
-        const newData = existSto.data;
-        for (const iterator of changes.insert) {
-          newData[iterator[0]] = iterator[1];
-        }
-        for (const iterator of changes.update) {
-          newData[iterator[0]] = iterator[1];
-        }
-        for (const iterator of changes.delete) {
-          delete newData[iterator];
-        }
-        existSto.updateStorage(newData, true);
-        success = true;
-      }
-    }
     this.send<IWorkerUpdateTaskReceiveMsg>(worker, {
       type: "update-task-result",
-      success,
+      success: this._updateExisttask(taskid, changes),
       taskid,
     });
   }
 
   private _finishTask(taskid: string, worker: cluster.Worker) {
-    const task = this._tasks.get(taskid);
-    let success = false;
-    if (task) {
-      success = task.finishTask(worker.process.pid);
-      this._clearFinishedTask(task);
-    }
+    const success = this._finishTheTask(taskid, worker.process.pid, task => this._clearFinishedTask(task));
     this.send<IWorkerFinishTaskReceiveMsg>(worker, {
       type: "finish-task-result",
       success,
@@ -230,13 +174,12 @@ export class Master<T extends IWorkerSendMsg = IWorkerSendMsg> {
 
   private _clearFinishedTask(task: Task) {
     if (!task.autoReset) {
-      this._finished_tasks.push(task);
-      this._tasks.delete(task.id);
+      this._clearFinishedTaskAction(task);
     } else {
       // 随机重新分配执行节点
       const random = Math.floor(Math.random() * 1000);
       const index = random % this._maxNum;
-      task.reset(this._workers[index]);
+      this._resetFinishedTaskAction(task, this._workers[index]);
     }
   }
 }
