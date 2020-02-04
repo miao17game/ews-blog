@@ -5,6 +5,7 @@ export interface IEntityCreate {
   id: string;
   module: string;
   name: string;
+  displayName: string | null;
   version: string | number;
   metadata: Record<string, any>;
 }
@@ -34,6 +35,7 @@ export class ModuleListComponent implements OnInit, OnDestroy {
       id: this.builder.Utils.createEntityId(),
       module: target.moduleName,
       name: target.name,
+      displayName: target.displayName === target.name ? null : target.displayName,
       version: target.metadata.entity.version,
       metadata: target.metadata,
     });

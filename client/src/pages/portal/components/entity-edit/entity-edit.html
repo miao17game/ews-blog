@@ -1,6 +1,92 @@
-<div *ngIf="model">
-  <div>id: {{ model.id }}</div>
+<style>
+  .root {
+    display: block;
+    padding: 8px;
+  }
+
+  .title-block {
+    padding: 12px;
+    border: 0px solid #ececec;
+    border-bottom-width: 1px;
+    background-color: #fcfcfc;
+    margin-top: -8px;
+  }
+
+  .entity-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .quote-style {
+    display: inline-block;
+    border-width: 0 0 0 6px;
+    border-color: #888;
+    border-style: solid;
+    padding: 4px;
+    padding-left: 4px;
+    background: #f2f2f2;
+  }
+
+  .options-group {
+    padding: 8px;
+  }
+
+  .options-first-title {
+    font-size: 16px;
+    font-weight: 500;
+    padding-bottom: 4px;
+    border: 0px solid #ececec;
+    border-bottom-width: 1px;
+  }
+
+  .options-second-title {
+    font-size: 14px;
+    font-weight: 300;
+    padding-bottom: 4px;
+    border: 0px solid #ececec;
+    border-bottom-width: 1px;
+    margin-top: 4px;
+  }
+
+  .options-list {
+    padding-left: 4px;
+  }
+</style>
+
+<div class="root" *ngIf="context.init">
+  <!-- <div>id: {{ model.id }}</div>
   <div>module: {{ model.module }}</div>
   <div>name: {{ model.name }}</div>
-  <div>version: {{ model.version }}</div>
+  <div>version: {{ model.version }}</div> -->
+  <div class="title-block">
+    <div class="entity-title">{{ context.displayName }}</div>
+    <div class="quote-style">{{ context.idVersion }}</div>
+  </div>
+  <div class="options-group">
+    <div class="options-first-title">模板属性</div>
+    <div *ngFor="let group of context.inputs">
+      <div *ngIf="group.children.length > 0">
+        <div class="options-second-title">{{ group.displayName }}</div>
+        <div class="options-list" *ngFor="let input of group.children">
+          <ng-container
+            *ngTemplateOutlet="optionItem; context: { model: model, display: input.name.displayValue, name: input.name.value }"
+          ></ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="options-group">
+    <div class="options-first-title">附加属性</div>
+    <div class="options-list" *ngFor="let attach of context.attaches">
+      <ng-container
+        *ngTemplateOutlet="optionItem; context: { model: model, display: attach.name.displayValue, name: attach.name.value }"
+      ></ng-container>
+    </div>
+  </div>
 </div>
+
+<ng-template #optionItem let-display="display" let-name="name">
+  <div *ngIf="display !== name && !!display">{{ display }}({{ name }})</div>
+  <div *ngIf="display === name || !display">{{ name }}</div>
+</ng-template>
