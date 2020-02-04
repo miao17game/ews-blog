@@ -33,7 +33,7 @@ export class ApiController {
     console.log("create preview ==> ");
     console.log(data);
     const { configs: others } = data;
-    const source = await this.compiler.createSourceString(others, {
+    const { source, dependencies } = await this.compiler.createSourceString(others, {
       enabled: true,
       jsx: "react",
       target: "es2015",
@@ -43,6 +43,7 @@ export class ApiController {
       code: 0,
       data: {
         source,
+        dependencies,
         configs: data,
       },
     };

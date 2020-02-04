@@ -5,7 +5,7 @@ import uuid from "uuid/v4";
 // import { cloneDeep } from "lodash";
 import { Injectable } from "@nestjs/common";
 import { IPageCreateOptions, ISourceCreateTranspileOptions } from "@amoebajs/builder";
-import { CompileService, ICommonBuildConfigs, TaskType } from "#global/services/compile.service";
+import { CompileService, ICommonBuildConfigs, TaskType, ISourceCreateResult } from "#global/services/compile.service";
 import { ClusterWorker } from "#global/services/worker.service";
 import { BuilderFactory } from "#core/index";
 
@@ -124,12 +124,12 @@ export class CoreCompiler implements CompileService<ICompileTask> {
   public async createSourceString(
     configs: IPageCreateOptions,
     transpile: Partial<ISourceCreateTranspileOptions> = { enabled: false },
-  ): Promise<string> {
-    const { sourceCode } = await this.builder.createSource({
+  ): Promise<ISourceCreateResult> {
+    const { sourceCode, dependencies } = await this.builder.createSource({
       configs,
       transpile,
     });
-    return sourceCode;
+    return { source: sourceCode, dependencies };
   }
 
   protected async findAndStartTask() {

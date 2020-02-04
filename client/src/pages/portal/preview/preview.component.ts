@@ -1,22 +1,37 @@
 import SDK from "@stackblitz/sdk";
 import yamljs from "js-yaml";
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from "@angular/core";
-import { NzMessageService, NzTabChangeEvent } from "ng-zorro-antd";
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, TemplateRef, Renderer2 } from "@angular/core";
+import { NzMessageService, NzModalService, NzModalRef } from "ng-zorro-antd";
 import { Project } from "@stackblitz/sdk/typings/interfaces";
 import { VM } from "@stackblitz/sdk/typings/VM";
 import { PortalService } from "../services/portal.service";
+import { Builder } from "../services/builder.service";
+
+const CommonDepts = {
+  "@types/react": "^16.9.7",
+  rxjs: "^6.5.4",
+};
 
 @Component({
   selector: "app-portal-preview",
   templateUrl: "./preview.html",
 })
 export class PortalPreviewComponent implements OnInit, AfterViewInit {
-  @ViewChild("previewHost", { static: false }) previewHost: ElementRef;
+  @ViewChild("previewRender", { static: false }) previewRender: ElementRef;
+  @ViewChild("previewTpl", { static: false }) previewTpl: TemplateRef<HTMLDivElement>;
+  @ViewChild("modalContent", { static: false }) modalContent: TemplateRef<any>;
 
   public showButton = false;
   public showEditor = true;
   public showPreview = false;
   public pageConfigs = createDefaultConfigs();
+  public lastDepts: Record<string, string> = {};
+  public tempEntityData!: any;
+  public modelRef!: NzModalRef;
+
+  public get lastDeptKvs() {
+    return Object.entries(this.lastDepts);
+  }
 
   private vm!: VM;
   private project: Project = {
@@ -24,13 +39,7 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
       "public/index.html": `<div id="app"></div>`,
       "src/index.js": "",
     },
-    dependencies: {
-      "@types/react": "^16.9.7",
-      zent: "^7.1.0",
-      rxjs: "^6.5.4",
-      react: "^16.12.0",
-      "react-dom": "^16.12.0",
-    },
+    dependencies: {},
     title: "Preview Page",
     description: "preview page",
     template: "create-react-app",
@@ -44,14 +53,20 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
     },
   };
 
-  constructor(private portal: PortalService, private message: NzMessageService) {}
+  constructor(
+    private renderer: Renderer2,
+    private portal: PortalService,
+    private message: NzMessageService,
+    private modal: NzModalService,
+    private builder: Builder,
+  ) {}
 
   ngOnInit() {
-    console.log(SDK);
+    // console.log(SDK);
+    console.log(this.builder.moduleList);
   }
 
   ngAfterViewInit() {
-    console.log(this.previewHost);
     this.showButton = true;
   }
 
@@ -66,11 +81,28 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
     }
   }
 
+  onEntityCreate(e: any) {
+    this.tempEntityData = e;
+  }
+
+  showModal() {
+    if (this.modelRef) {
+      this.modelRef.destroy();
+    }
+    this.modelRef = this.modal.create({
+      nzTitle: "创建节点",
+      nzContent: this.modalContent,
+      nzWidth: "80vw",
+      nzOnCancel: () => (this.tempEntityData = null),
+    });
+  }
+
   private async runUpdate() {
     try {
       const configs = yamljs.safeLoad(this.pageConfigs);
-      const result = await this.portal.createSource("json", configs);
-      if (this.vm) {
+      const result = await this.portal.createSource(configs);
+      const hasDeptsChange = this.checkIfAllEqual(result.data.dependencies);
+      if (this.vm && hasDeptsChange) {
         this.vm.applyFsDiff({
           create: {
             "src/index.js": result.data.source,
@@ -78,7 +110,17 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
           destroy: [],
         });
       } else {
+        const firstChild = this.previewRender.nativeElement.childNodes[0];
+        if (firstChild) {
+          this.renderer.removeChild(this.previewRender.nativeElement, firstChild);
+          this.vm = null;
+        }
         this.project.files["src/index.js"] = result.data.source;
+        this.lastDepts = { ...result.data.dependencies };
+        this.project.dependencies = {
+          ...CommonDepts,
+          ...result.data.dependencies,
+        };
         this.onStart();
       }
     } catch (error) {
@@ -86,18 +128,24 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
     }
   }
 
+  private checkIfAllEqual(newDepts: Record<string, string>) {
+    return Object.entries(newDepts).every(([k, v]) => k in this.lastDepts && this.lastDepts[k] === v);
+  }
+
   onStart() {
-    SDK.embedProject(this.previewHost.nativeElement, this.project, {
+    const tpl = this.previewTpl.createEmbeddedView(null);
+    this.renderer.appendChild(this.previewRender.nativeElement, tpl.rootNodes[0]);
+    SDK.embedProject(tpl.rootNodes[0], this.project, {
       hideExplorer: true,
       hideDevTools: true,
       hideNavigation: true,
       forceEmbedLayout: true,
-      height: "760px",
       view: "preview",
     }).then(vm => {
-      // TODO
       this.vm = vm;
-      console.log(vm);
+      const iframe = this.previewRender.nativeElement.childNodes[0];
+      this.renderer.setAttribute(iframe, "style", "width: 100%; height: 80vh");
+      this.renderer.setAttribute(iframe, "height", "");
     });
   }
 
@@ -181,21 +229,18 @@ page:
     - ref: GridLayout
       id: GridLayoutChild01
       input:
-        backgroundColor:
+        background:
           type: literal
           expression: "#fea500"
         padding:
           type: literal
           expression:
-            - [top, 10px]
-            - [left, 10px]
-            - [right, 10px]
-            - [bottom, 10px]
+            - [all, 10px]
       children:
         - ref: StackLayout
           id: StackLayoutChild01
           input:
-            backgroundColor:
+            background:
               type: literal
               expression: "#888888"
           children:
@@ -231,19 +276,33 @@ page:
     - ref: GridLayout
       id: GridLayoutChild02
       input:
-        backgroundColor:
+        background:
           type: literal
           expression: "#323233"
+        borderColor:
+          type: literal
+          expression:
+            - [all, "#ffffff"]
+            - [bottom, "#fea588"]
+        borderWidth:
+          type: literal
+          expression:
+            - [all, 4px]
+        borderStyle:
+          type: literal
+          expression:
+            - [all, hidden]
+            - [bottom, solid]
     - ref: GridLayout
       id: GridLayoutChild03
       input:
-        backgroundColor:
+        background:
           type: literal
           expression: "rgb(254, 38, 76)"
     - ref: GridLayout
       id: GridLayoutChild04
       input:
-        backgroundColor:
+        background:
           type: literal
           expression: "rgb(54, 158, 106)"
       children:

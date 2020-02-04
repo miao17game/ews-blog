@@ -11,6 +11,11 @@ export interface ICommonBuildConfigs {
   options: IPageCreateOptions;
 }
 
+export interface ISourceCreateResult {
+  source: string;
+  dependencies: Record<string, string>;
+}
+
 @Injectable()
 export abstract class CompileService<T> {
   public abstract getTemplateGroup(): IGlobalMap;
@@ -20,6 +25,6 @@ export abstract class CompileService<T> {
   public abstract createSourceString(
     configs: IPageCreateOptions,
     transpile?: Partial<ISourceCreateTranspileOptions>,
-  ): Promise<string>;
+  ): Promise<ISourceCreateResult>;
   public abstract queryTask(id: string): Promise<T | null>;
 }
