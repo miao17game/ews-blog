@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, Output, EventEmitter } from "@angular/core";
+import { Component, OnDestroy, OnInit, Output, EventEmitter, ChangeDetectionStrategy } from "@angular/core";
 import { Builder } from "../../services/builder.service";
 
 export interface IEntityCreate {
@@ -12,6 +12,7 @@ export interface IEntityCreate {
 @Component({
   selector: "app-portal-module-list",
   templateUrl: "./module-list.html",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModuleListComponent implements OnInit, OnDestroy {
   @Output()
