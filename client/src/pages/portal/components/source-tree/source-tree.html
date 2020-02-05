@@ -24,7 +24,7 @@
       </div>
       <div class="entity-children" *ngIf="model.children && model.children.length > 0">
         <!-- <div class="section">Children</div> -->
-        <ng-container class="section" *ngFor="let childNode of model.children">
+        <ng-container *ngFor="let childNode of model.children">
           <ng-container *ngTemplateOutlet="entityDecla; context: { model: childNode }"></ng-container>
         </ng-container>
       </div>
