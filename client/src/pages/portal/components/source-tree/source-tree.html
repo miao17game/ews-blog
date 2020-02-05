@@ -1,0 +1,85 @@
+<div *ngIf="context" class="root">
+  <div class="section" *ngFor="let comp of context.components">
+    <ng-container *ngTemplateOutlet="importDecla; context: { model: comp, type: 'component' }"></ng-container>
+  </div>
+  <div class="section" *ngFor="let dire of context.directives">
+    <ng-container *ngTemplateOutlet="importDecla; context: { model: dire, type: 'directive' }"></ng-container>
+  </div>
+  <ng-container *ngTemplateOutlet="entityDecla; context: { model: context.page }"></ng-container>
+</div>
+
+<ng-template #importDecla let-model="model" let-type="type">
+  <div class="import-decla">
+    <i nz-icon [nzType]=" type === 'component' ? 'appstore': 'api' " nzTheme="outline"></i>
+    <span>{{ model.id }}</span>
+  </div>
+</ng-template>
+
+<ng-template #entityDecla let-model="model">
+  <div class="section">
+    <div class="entity-decla">
+      <div class="entity-title">
+        <i nz-icon nzType="layout" nzTheme="outline"></i>
+        <span>{{ model.ref }}</span>
+      </div>
+      <div class="entity-children" *ngIf="model.children && model.children.length > 0">
+        <!-- <div class="section">Children</div> -->
+        <ng-container class="section" *ngFor="let childNode of model.children">
+          <ng-container *ngTemplateOutlet="entityDecla; context: { model: childNode }"></ng-container>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<style>
+  .root {
+    display: block;
+    border: 1px solid #ececec;
+    background: #fafafa;
+  }
+
+  .section {
+    margin: 8px;
+  }
+
+  .import-decla {
+    border: 1px solid #ececec;
+    background: #fff;
+    padding: 4px;
+    cursor: pointer;
+    transition: background 0.35s;
+  }
+
+  .import-decla:hover {
+    background: #f6f6f6;
+  }
+
+  .entity-decla {
+    border: 1px solid #ececec;
+    background: #fff;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .import-decla i {
+    margin-right: 4px;
+  }
+
+  .entity-title {
+    padding: 4px;
+    transition: background 0.35s;
+  }
+
+  .entity-title:hover {
+    background: #f6f6f6;
+  }
+
+  .entity-title i {
+    margin-right: 4px;
+  }
+
+  .entity-children {
+    margin-top: 4px;
+  }
+</style>

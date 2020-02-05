@@ -9,6 +9,7 @@ import { PortalPreviewComponent } from "./preview/preview.component";
 import { Builder } from "./services/builder.service";
 import { ModuleListComponent } from "./components/module-list/module-list.component";
 import { EntityEditComponent } from "./components/entity-edit/entity-edit.component";
+import { SourceTreeComponent } from "./components/source-tree/source-tree.component";
 
 const routes: Routes = [
   { path: "", component: PortalRootComponent, data: { title: "Portal" } },
@@ -24,6 +25,7 @@ const routes: Routes = [
     PortalPreviewComponent,
     ModuleListComponent,
     EntityEditComponent,
+    SourceTreeComponent,
   ],
   imports: [CommonsModule, RouterModule.forChild(routes)],
   providers: [PortalService, Builder],

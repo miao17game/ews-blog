@@ -21,13 +21,14 @@
   </div>
   <div class="editor-group">
     <div [class.editor-column-hidden]="!showEditor" class="editor-column">
-      <textarea
+      <!-- <textarea
         style="height: 80vh"
         rows="36"
         nz-input
         [(ngModel)]="pageConfigs"
         (ngModelChange)="onTextareaChange($event)"
-      ></textarea>
+      ></textarea> -->
+      <app-portal-source-tree [context]="createContext"></app-portal-source-tree>
     </div>
     <div [class.editor-column-hidden]="!showPreview" class="editor-column preview-container">
       <div #previewRender></div>
