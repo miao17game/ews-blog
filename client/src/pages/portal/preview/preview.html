@@ -1,3 +1,88 @@
+<app-portal-layout>
+  <div class="buttons-group">
+    <button class="button-item" nz-button [nzType]="'primary'" (click)="showModal()">新建</button>
+    <button class="button-item" nz-button [nzType]="showEditor?'primary':'default'" (click)="onEditorClick()">
+      参数
+    </button>
+    <button class="button-item" nz-button [nzType]="showPreview?'primary':'default'" (click)="onPreviewClick()">
+      预览
+    </button>
+    <div class="buttom-dropdown">
+      <a nz-dropdown [nzDropdownMenu]="menu">
+        查看NPM依赖
+        <i nz-icon nzType="down"></i>
+      </a>
+      <nz-dropdown-menu #menu="nzDropdownMenu">
+        <ul nz-menu nzSelectable>
+          <li *ngFor="let dependency of lastDeptKvs" nz-menu-item>{{ dependency[0] }}: {{ dependency[1] }}</li>
+        </ul>
+      </nz-dropdown-menu>
+    </div>
+  </div>
+  <div class="editor-group">
+    <div [class.editor-column-hidden]="!showEditor" class="editor-column">
+      <textarea
+        style="height: 80vh"
+        rows="36"
+        nz-input
+        [(ngModel)]="pageConfigs"
+        (ngModelChange)="onTextareaChange($event)"
+      ></textarea>
+    </div>
+    <div [class.editor-column-hidden]="!showPreview" class="editor-column preview-container">
+      <div #previewRender></div>
+      <ng-container *ngTemplateOutlet="previewBottomBar"></ng-container>
+      <ng-container *ngTemplateOutlet="previewTopBar"></ng-container>
+      <ng-container *ngTemplateOutlet="previewLoading"></ng-container>
+    </div>
+  </div>
+</app-portal-layout>
+
+<ng-template #previewTpl>
+  <div class="preview-host-placeholder"></div>
+</ng-template>
+
+<ng-template #previewBottomBar>
+  <div class="preview-preblock">
+    <div class="windows-logo">
+      <i nz-icon nzType="windows" nzTheme="fill"></i>
+    </div>
+    <div class="windows-logo windows-search">
+      <i nz-icon nzType="search" nzTheme="outline"></i>
+      <span>Type here to search</span>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #previewTopBar>
+  <div class="preview-preblock topblock">
+    <div class="circle-mac green"></div>
+    <div class="circle-mac yellow"></div>
+    <div class="circle-mac red"></div>
+  </div>
+</ng-template>
+
+<ng-template #previewLoading>
+  <div *ngIf="!vm" class="preview-loading">
+    <nz-result [nzIcon]="'smile-twotone'" [nzTitle]="'页面预览正在启动，请稍候'"></nz-result>
+  </div>
+</ng-template>
+
+<ng-template #modalContent>
+  <div *ngIf="tempEntityData" class="edit-goback" (click)="editGoBack()">
+    <i nz-icon nzType="left" nzTheme="outline"></i>
+    <span>后退</span>
+  </div>
+  <div class="model-slide-group">
+    <div class="model-slide-selectlist" *ngIf="!tempEntityData">
+      <app-portal-module-list (onEntityCreate)="onEntityCreate($event)"></app-portal-module-list>
+    </div>
+    <div class="model-slide-edit" *ngIf="tempEntityData">
+      <app-portal-entity-edit [model]="tempEntityData"></app-portal-entity-edit>
+    </div>
+  </div>
+</ng-template>
+
 <style>
   :host ::ng-deep iframe {
     border-width: 0;
@@ -71,17 +156,36 @@
 
   .model-slide-group {
     display: flex;
-    max-height: 80vh;
+    height: 60vh;
   }
 
-  .model-slide-item1 {
+  .model-slide-selectlist {
     flex: 1;
     overflow-y: auto;
   }
 
-  .model-slide-item2 {
-    flex: 2;
+  .model-slide-edit {
+    flex: 1;
     overflow-y: auto;
+    margin: -4px;
+  }
+
+  .edit-goback {
+    display: inline-block;
+    margin-left: -12px;
+    margin-top: -24px;
+    margin-bottom: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #1890ff;
+    height: 36px;
+  }
+
+  .edit-goback i {
+    margin-right: 4px;
+    font-weight: 500;
+    color: #1890ff;
   }
 
   .circle-mac {
@@ -128,70 +232,3 @@
     margin-right: 8px;
   }
 </style>
-<app-portal-layout>
-  <div class="buttons-group">
-    <button class="button-item" nz-button [nzType]="'primary'" (click)="showModal()">新建</button>
-    <button class="button-item" nz-button [nzType]="showEditor?'primary':'default'" (click)="onEditorClick()">
-      参数
-    </button>
-    <button class="button-item" nz-button [nzType]="showPreview?'primary':'default'" (click)="onPreviewClick()">
-      预览
-    </button>
-    <div class="buttom-dropdown">
-      <a nz-dropdown [nzDropdownMenu]="menu">
-        查看NPM依赖
-        <i nz-icon nzType="down"></i>
-      </a>
-      <nz-dropdown-menu #menu="nzDropdownMenu">
-        <ul nz-menu nzSelectable>
-          <li *ngFor="let dependency of lastDeptKvs" nz-menu-item>{{ dependency[0] }}: {{ dependency[1] }}</li>
-        </ul>
-      </nz-dropdown-menu>
-    </div>
-  </div>
-  <div class="editor-group">
-    <div [class.editor-column-hidden]="!showEditor" class="editor-column">
-      <textarea
-        style="height: 80vh"
-        rows="36"
-        nz-input
-        [(ngModel)]="pageConfigs"
-        (ngModelChange)="onTextareaChange($event)"
-      ></textarea>
-    </div>
-    <div [class.editor-column-hidden]="!showPreview" class="editor-column preview-container">
-      <div #previewRender></div>
-      <div class="preview-preblock">
-        <div class="windows-logo">
-          <i nz-icon nzType="windows" nzTheme="fill"></i>
-        </div>
-        <div class="windows-logo windows-search">
-          <i nz-icon nzType="search" nzTheme="outline"></i>
-          <span>Type here to search</span>
-        </div>
-      </div>
-      <div class="preview-preblock topblock">
-        <div class="circle-mac green"></div>
-        <div class="circle-mac yellow"></div>
-        <div class="circle-mac red"></div>
-      </div>
-      <div *ngIf="!vm" class="preview-loading">
-        <nz-result [nzIcon]="'smile-twotone'" [nzTitle]="'页面预览正在启动，请稍候'"></nz-result>
-      </div>
-      <ng-template #previewTpl>
-        <div class="preview-host-placeholder"></div>
-      </ng-template>
-    </div>
-  </div>
-</app-portal-layout>
-
-<ng-template #modalContent>
-  <div class="model-slide-group">
-    <div class="model-slide-item1">
-      <app-portal-module-list (onEntityCreate)="onEntityCreate($event)"></app-portal-module-list>
-    </div>
-    <div class="model-slide-item2" *ngIf="tempEntityData">
-      <app-portal-entity-edit [model]="tempEntityData"></app-portal-entity-edit>
-    </div>
-  </div>
-</ng-template>

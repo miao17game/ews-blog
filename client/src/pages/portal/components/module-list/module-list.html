@@ -1,3 +1,42 @@
+<div class="group-root">
+  <div *ngFor="let module of moduleList" class="module-group">
+    <ng-container *ngTemplateOutlet="moduleGroup; context: { model: module }"></ng-container>
+  </div>
+</div>
+
+<!-- module 布局 -->
+<ng-template #moduleGroup let-model="model">
+  <div class="module-title">
+    <i nz-icon nzType="code-sandbox" nzTheme="outline"></i>
+    <span>{{ model.displayName }}</span>
+  </div>
+  <ng-container
+    *ngTemplateOutlet="moduleSubGroup; context: { model: model, type: 'component', target: 'components' }"
+  ></ng-container>
+  <ng-container
+    *ngTemplateOutlet="moduleSubGroup; context: { model: model, type: 'directive', target: 'directives' }"
+  ></ng-container>
+</ng-template>
+
+<!-- module 二级布局 -->
+<ng-template #moduleSubGroup let-model="model" let-type="type" let-target="target">
+  <div *ngIf="model[target].length > 0" class="module-sub-group">
+    <div *ngFor="let entity of model[target]">
+      <ng-container *ngTemplateOutlet="entityGroup; context: { model: entity, type: type }"></ng-container>
+    </div>
+  </div>
+</ng-template>
+
+<!-- entity 布局 -->
+<ng-template #entityGroup let-model="model" let-type="type">
+  <div class="entity-group">
+    <i nz-icon [nzType]=" type === 'component' ? 'appstore': 'api' " nzTheme="outline"></i>
+    <div (click)="onEntityClick(model)">
+      {{ model.displayName !== model.name ? model.displayName + '(' + model.name + ')': model.displayName }}
+    </div>
+  </div>
+</ng-template>
+
 <style>
   .group-root {
     display: block;
@@ -43,42 +82,3 @@
     margin-right: 4px;
   }
 </style>
-
-<div class="group-root">
-  <div *ngFor="let module of moduleList" class="module-group">
-    <ng-container *ngTemplateOutlet="moduleGroup; context: { model: module }"></ng-container>
-  </div>
-</div>
-
-<!-- module 布局 -->
-<ng-template #moduleGroup let-model="model">
-  <div class="module-title">
-    <i nz-icon nzType="code-sandbox" nzTheme="outline"></i>
-    <span>{{ model.displayName }}</span>
-  </div>
-  <ng-container
-    *ngTemplateOutlet="moduleSubGroup; context: { model: model, type: 'component', target: 'components' }"
-  ></ng-container>
-  <ng-container
-    *ngTemplateOutlet="moduleSubGroup; context: { model: model, type: 'directive', target: 'directives' }"
-  ></ng-container>
-</ng-template>
-
-<!-- module 二级布局 -->
-<ng-template #moduleSubGroup let-model="model" let-type="type" let-target="target">
-  <div *ngIf="model[target].length > 0" class="module-sub-group">
-    <div *ngFor="let entity of model[target]">
-      <ng-container *ngTemplateOutlet="entityGroup; context: { model: entity, type: type }"></ng-container>
-    </div>
-  </div>
-</ng-template>
-
-<!-- entity 布局 -->
-<ng-template #entityGroup let-model="model" let-type="type">
-  <div class="entity-group">
-    <i nz-icon [nzType]=" type === 'component' ? 'appstore': 'api' " nzTheme="outline"></i>
-    <div (click)="onEntityClick(model)">
-      {{ model.displayName !== model.name ? model.displayName + '(' + model.name + ')': model.displayName }}
-    </div>
-  </div>
-</ng-template>

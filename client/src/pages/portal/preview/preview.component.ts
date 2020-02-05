@@ -83,6 +83,16 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
 
   onEntityCreate(e: any) {
     this.tempEntityData = e;
+    if (this.modelRef) {
+      this.modelRef.getInstance().nzWidth = "80vw";
+    }
+  }
+
+  editGoBack() {
+    this.tempEntityData = null;
+    if (this.modelRef) {
+      this.modelRef.getInstance().nzWidth = "40vw";
+    }
   }
 
   showModal() {
@@ -92,7 +102,7 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
     this.modelRef = this.modal.create({
       nzTitle: "创建节点",
       nzContent: this.modalContent,
-      nzWidth: "80vw",
+      nzWidth: "40vw",
       nzOnCancel: () => (this.tempEntityData = null),
     });
   }
