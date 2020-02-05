@@ -77,4 +77,12 @@ export class Builder {
       this.moduleList.push({ ...md, components, directives });
     });
   }
+
+  public getComponent(module: string, name: string) {
+    return this.builder.globalMap.getComponent(module, name);
+  }
+
+  public getDirective(module: string, name: string) {
+    return this.builder.globalMap.getDirective(module, name);
+  }
 }

@@ -1,17 +1,17 @@
-<div *ngIf="context" class="root">
-  <div class="section" *ngFor="let comp of context.components">
+<div *ngIf="tree" class="root">
+  <div class="section" *ngFor="let comp of tree.components">
     <ng-container *ngTemplateOutlet="importDecla; context: { model: comp, type: 'component' }"></ng-container>
   </div>
-  <div class="section" *ngFor="let dire of context.directives">
+  <div class="section" *ngFor="let dire of tree.directives">
     <ng-container *ngTemplateOutlet="importDecla; context: { model: dire, type: 'directive' }"></ng-container>
   </div>
-  <ng-container *ngTemplateOutlet="entityDecla; context: { model: context.page }"></ng-container>
+  <ng-container *ngTemplateOutlet="entityDecla; context: { model: tree.page }"></ng-container>
 </div>
 
 <ng-template #importDecla let-model="model" let-type="type">
   <div class="import-decla">
     <i nz-icon [nzType]=" type === 'component' ? 'appstore': 'api' " nzTheme="outline"></i>
-    <span>{{ model.id }}</span>
+    <span [title]="model.id">{{ model.displayInfo.displayName }}</span>
   </div>
 </ng-template>
 
@@ -20,7 +20,7 @@
     <div class="entity-decla">
       <div class="entity-title">
         <i nz-icon nzType="layout" nzTheme="outline"></i>
-        <span>{{ model.ref }}</span>
+        <span [title]="model.id">{{ model.displayInfo.displayName }}</span>
       </div>
       <div class="entity-children" *ngIf="model.children && model.children.length > 0">
         <!-- <div class="section">Children</div> -->
