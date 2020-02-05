@@ -42,6 +42,7 @@
   }
 
   .preview-preblock {
+    display: flex;
     background: #f0f0f0;
     position: absolute;
     top: calc(80vh - 40px);
@@ -50,17 +51,19 @@
     text-align: center;
     line-height: 40px;
     font-weight: 500;
+    border-top: 1px solid #e6e6e6;
   }
 
   .topblock {
     top: 0;
+    border-bottom: 1px solid #e6e6e6;
   }
 
   .preview-loading {
     background: #f0f0f0;
     top: 40px;
     width: 100%;
-    bottom: calc(80vh - 80px);
+    bottom: calc(40px);
     position: absolute;
     text-align: center;
     padding-top: 20vh;
@@ -79,6 +82,50 @@
   .model-slide-item2 {
     flex: 2;
     overflow-y: auto;
+  }
+
+  .circle-mac {
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    margin-left: 8px;
+    margin-top: 12px;
+  }
+
+  .yellow {
+    background: #ffa500;
+  }
+
+  .green {
+    background: rgb(94, 182, 7);
+  }
+
+  .red {
+    background: #ff4d4f;
+  }
+
+  .windows-logo {
+    margin-top: -1px;
+    width: 40px;
+    height: 40px;
+    color: #000;
+    font-size: 18px;
+    border: 1px solid #e0e0e0;
+  }
+
+  .windows-search {
+    padding-left: 8px;
+    border-left-width: 0;
+    width: 240px;
+    font-size: 15px;
+    text-align: left;
+    font-weight: 100;
+    vertical-align: text-bottom;
+  }
+
+  .windows-search i {
+    transform: rotateY(180deg);
+    margin-right: 8px;
   }
 </style>
 <app-portal-layout>
@@ -114,8 +161,20 @@
     </div>
     <div [class.editor-column-hidden]="!showPreview" class="editor-column preview-container">
       <div #previewRender></div>
-      <div class="preview-preblock">Preview</div>
-      <div class="preview-preblock topblock">Preview</div>
+      <div class="preview-preblock">
+        <div class="windows-logo">
+          <i nz-icon nzType="windows" nzTheme="fill"></i>
+        </div>
+        <div class="windows-logo windows-search">
+          <i nz-icon nzType="search" nzTheme="outline"></i>
+          <span>Type here to search</span>
+        </div>
+      </div>
+      <div class="preview-preblock topblock">
+        <div class="circle-mac green"></div>
+        <div class="circle-mac yellow"></div>
+        <div class="circle-mac red"></div>
+      </div>
       <div *ngIf="!vm" class="preview-loading">
         <nz-result [nzIcon]="'smile-twotone'" [nzTitle]="'页面预览正在启动，请稍候'"></nz-result>
       </div>

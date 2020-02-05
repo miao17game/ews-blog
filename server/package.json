@@ -21,10 +21,12 @@
     "copy:configs": "npx copy src/configs/**/*.yaml dist/configs",
     "copy:tsconfig": "npx copy tsconfig.jsx.json dist",
     "copy:dev": "yarn prebuild && yarn copy:prod",
-    "copy:prod": "yarn copy:assets && yarn copy:configs && yarn copy:tsconfig"
+    "copy:prod": "yarn copy:assets && yarn copy:configs && yarn copy:tsconfig",
+    "update:core": "yarn add @amoebajs/basic-modules && yarn add @amoebajs/builder"
   },
   "dependencies": {
-    "@amoebajs/builder": "0.0.2-alpha.1580828451928",
+    "@amoebajs/basic-modules": "^0.0.1-alpha.1580900280562",
+    "@amoebajs/builder": "^0.0.2-alpha.1580899960422",
     "@nestjs/common": "^6.7.2",
     "@nestjs/core": "^6.7.2",
     "@nestjs/platform-express": "^6.7.2",

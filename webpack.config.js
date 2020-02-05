@@ -10,6 +10,9 @@ module.exports = {
   mode: "production",
   resolve: {
     extensions: [".ts", ".js", ".json"],
+    alias: {
+      "@amoebajs/builder$": "@amoebajs/builder/index.websdk",
+    },
   },
   optimization: {
     minimize: true,
@@ -32,6 +35,6 @@ module.exports = {
     ],
   },
   plugins: [
-    /* new BundleAnalyzerPlugin() */
+    // new BundleAnalyzerPlugin()
   ],
 };

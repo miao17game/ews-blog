@@ -201,7 +201,7 @@ export class CoreCompiler implements CompileService<ICompileTask> {
         entry: { app: targetFile },
         output: { path: buildDir, filename: "[name].[hash].js" },
         plugins: [this.builder.webpackPlugins.createProgressPlugin()],
-        typescript: { tsconfig: getTsconfigFile() },
+        typescript: { compilerOptions: { outDir: "temp-dist" } },
         sandbox: {
           rootPath: getNpmSandbox(),
           dependencies,
