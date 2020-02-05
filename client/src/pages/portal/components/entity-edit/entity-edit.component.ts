@@ -1,14 +1,19 @@
-import { Component, OnDestroy, OnInit, Input, OnChanges } from "@angular/core";
-import { Builder } from "../../services/builder.service";
+import { Component, OnDestroy, OnInit, Input, OnChanges, Output, EventEmitter } from "@angular/core";
+import { Builder, ICompileContext } from "../../services/builder.service";
 import { IEntityCreate } from "../module-list/module-list.component";
 
-interface IContext {
+interface IEntityContext {
   init: boolean;
   displayName: string;
   idVersion: string;
   inputs: IGroup[];
   attaches: any[];
+  data: {
+    inputs: Record<string, any>;
+  };
 }
+
+interface IScope {}
 
 interface IGroup {
   name: string;
@@ -24,13 +29,17 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
   @Input()
   model: IEntityCreate;
 
-  public context: IContext = {
-    init: false,
-    displayName: "",
-    idVersion: "",
-    inputs: [],
-    attaches: [],
-  };
+  @Input()
+  context: ICompileContext;
+
+  @Input()
+  parents: string[] = [];
+
+  @Output()
+  onComplete = new EventEmitter<any>();
+
+  public entity!: IEntityContext;
+  public scope: IScope = {};
 
   constructor(private builder: Builder) {}
 
@@ -39,9 +48,10 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private initContext(model: IEntityCreate) {
-    this.context.displayName = model.displayName || model.name;
-    this.context.idVersion = `${model.module}/${model.name}@${model.version}`;
-    this.context.attaches = Object.entries(model.metadata.attaches).map(([, d]) => d);
+    this.entity = createDefaultEntity();
+    this.entity.displayName = model.displayName || model.name;
+    this.entity.idVersion = `${model.module}/${model.name}@${model.version}`;
+    this.entity.attaches = Object.entries(model.metadata.attaches).map(([, d]) => d);
     const groups: Record<string, any> = {
       default: { name: "default", displayName: "Default", children: [] },
     };
@@ -56,10 +66,38 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
           children: [],
         }),
     );
-    Object.entries<any>(model.metadata.inputs).forEach(([, d]) => groups[d.group || "default"].children.push(d));
-    this.context.inputs = Object.entries(groups).map(([, g]) => g);
-    // console.log(this.context);
-    this.context.init = true;
+    Object.entries<any>(model.metadata.inputs).forEach(([, d]) => {
+      const groupName = d.group || "default";
+      const fullname = `${d.group || "default"}.${d.name.value}`;
+      groups[groupName].children.push(d);
+      this.entity.data.inputs[fullname] = { value: null };
+    });
+    this.entity.inputs = Object.entries(groups).map(([, g]) => g);
+    this.entity.init = true;
+    // to DEBUG
+    console.log(this.context);
+    if (this.parents.length > 0) {
+      const [page, ...others] = this.parents;
+      console.log(page);
+      if (page) {
+        let x: any;
+        const childList = this.context.page.children || [];
+        if (others.length === 0) {
+          this.scope = this.context.page;
+          return;
+        }
+        for (const id of others) {
+          x = childList.find(i => i.id === id);
+          if (!x) break;
+        }
+        if (!x) return;
+        this.scope = x;
+      }
+    }
+  }
+
+  onModelChange() {
+    console.log(this.entity.data);
   }
 
   ngOnChanges(changes: import("@angular/core").SimpleChanges): void {
@@ -73,5 +111,34 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    const { data } = this.entity;
+    for (const key in data.inputs) {
+      if (data.inputs.hasOwnProperty(key)) {
+        const element = data.inputs[key];
+        if (element.value === null) {
+          delete data.inputs[key];
+        }
+      }
+    }
+    this.onComplete.emit({
+      id: this.model.id,
+      module: this.model.module,
+      name: this.model.name,
+      ...data,
+    });
+  }
+}
+
+function createDefaultEntity(): IEntityContext {
+  return {
+    init: false,
+    displayName: "",
+    idVersion: "",
+    inputs: [],
+    attaches: [],
+    data: {
+      inputs: {},
+    },
+  };
 }

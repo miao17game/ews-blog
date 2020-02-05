@@ -1,34 +1,48 @@
-<div class="root" *ngIf="context.init">
+<div class="root" *ngIf="entity.init">
   <div class="title-block">
-    <div class="entity-title">{{ context.displayName }}</div>
-    <div class="quote-style">{{ context.idVersion }}</div>
+    <div class="entity-title">{{ entity.displayName }}</div>
+    <div class="quote-style">{{ entity.idVersion }}</div>
   </div>
   <div class="options-group">
     <div class="options-first-title">模板属性</div>
-    <div *ngFor="let group of context.inputs">
+    <div *ngFor="let group of entity.inputs">
       <div *ngIf="group.children.length > 0">
         <div class="options-second-title">{{ group.displayName }}</div>
         <div class="options-list" *ngFor="let input of group.children">
           <ng-container
-            *ngTemplateOutlet="optionItem; context: { model: model, display: input.name.displayValue, name: input.name.value }"
+            *ngTemplateOutlet="optionItem; context: {
+              model: input,
+              fullname: group.name !== 'default' ? group.name + '.' + input.name.value: input.name.value,
+              display: input.name.displayValue,
+              name: input.name.value
+            }"
           ></ng-container>
         </div>
       </div>
     </div>
   </div>
-  <div class="options-group">
+  <!-- <div class="options-group">
     <div class="options-first-title">附加属性</div>
-    <div class="options-list" *ngFor="let attach of context.attaches">
+    <div class="options-list" *ngFor="let attach of entity.attaches">
       <ng-container
-        *ngTemplateOutlet="optionItem; context: { model: model, display: attach.name.displayValue, name: attach.name.value }"
+        *ngTemplateOutlet="optionItem; context: { model: attach, display: attach.name.displayValue, name: attach.name.value }"
       ></ng-container>
     </div>
-  </div>
+  </div> -->
 </div>
 
-<ng-template #optionItem let-display="display" let-name="name">
+<ng-template #optionItem let-model="model" let-group="group" let-display="display" let-fullname="fullname">
   <div *ngIf="display !== name && !!display">{{ display }}({{ name }})</div>
   <div *ngIf="display === name || !display">{{ name }}</div>
+  <div>{{ model | jsonStringify }}</div>
+  <div *ngIf="model.type.meta === 'string'">
+    <input
+      nz-input
+      [placeholder]="'请输入' + display || name"
+      [(ngModel)]="entity.data.inputs[fullname].value"
+      (ngModelChange)="onModelChange()"
+    />
+  </div>
 </ng-template>
 
 <style>

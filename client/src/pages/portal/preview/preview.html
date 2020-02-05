@@ -78,7 +78,12 @@
       <app-portal-module-list (onEntityCreate)="onEntityCreate($event)"></app-portal-module-list>
     </div>
     <div class="model-slide-edit" *ngIf="tempEntityData">
-      <app-portal-entity-edit [model]="tempEntityData"></app-portal-entity-edit>
+      <app-portal-entity-edit
+        [model]="tempEntityData"
+        [context]="createContext"
+        [parents]="parentPaths"
+        (onComplete)="onEmit($event)"
+      ></app-portal-entity-edit>
     </div>
   </div>
 </ng-template>

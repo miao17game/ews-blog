@@ -26,6 +26,39 @@ declare global {
   interface Window extends IEwsWindow {}
 }
 
+export interface IDirectiveDefine {
+  module: string;
+  name: string;
+  id: string;
+  version: string | number;
+}
+
+export interface IComponentDefine extends IDirectiveDefine {}
+
+export interface IDirectiveChildDefine {
+  ref: string;
+  id: string;
+  input?: { [name: string]: any };
+}
+
+export interface IComponentChildDefine extends IDirectiveChildDefine {
+  children?: IComponentChildDefine[];
+  directives?: IComponentChildDefine[];
+  attach?: { [name: string]: any };
+  props?: { [name: string]: any };
+}
+
+export interface IPageDefine extends IComponentChildDefine {
+  slot?: string;
+}
+
+export interface ICompileContext {
+  provider: "react";
+  components?: IComponentDefine[];
+  directives?: IDirectiveDefine[];
+  page?: IPageDefine;
+}
+
 @Injectable()
 export class Builder {
   private factory = new window.EwsBuilderFactory().parse();
