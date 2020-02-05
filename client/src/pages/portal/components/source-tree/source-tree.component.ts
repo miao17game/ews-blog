@@ -60,8 +60,8 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
     if (comp) {
       return {
         ...others,
-        children: (children || []).map(i => this.getEntityDisplayName(i)),
-        directives: (directives || []).map(i => this.getEntityDisplayName(i)),
+        children: (children || []).map(i => this.getEntityDisplayName(i)).filter(i => !!i),
+        directives: (directives || []).map(i => this.getEntityDisplayName(i)).filter(i => !!i),
         displayInfo: {
           displayName: comp.displayInfo.displayName,
         },
