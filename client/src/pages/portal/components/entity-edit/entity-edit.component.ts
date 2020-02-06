@@ -84,6 +84,11 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
     });
   }
 
+  isColor(value: string | null) {
+    if (typeof value !== "string") return false;
+    return /^#[0-9abcdefABCDEF]{6,8}$/.test(value);
+  }
+
   onModelChange() {
     // console.log(this.entity.data);
   }

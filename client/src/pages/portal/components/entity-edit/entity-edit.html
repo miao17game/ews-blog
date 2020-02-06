@@ -28,11 +28,12 @@
   <ng-container [ngSwitch]="model.type.meta">
     <div *ngSwitchCase="'string'" class="input-layout">
       <div class="input-label">{{ model.displayInfo.displayName }}</div>
-      <input
-        nz-input
-        [placeholder]="'请输入' + model.displayInfo.displayName"
-        [(ngModel)]="entity.data.inputs[model.displayInfo.fullname].value"
-      />
+      <ng-container
+        *ngTemplateOutlet="stringColorGroup; context: {
+          model: model,
+          data: entity.data.inputs[model.displayInfo.fullname]
+        }"
+      ></ng-container>
     </div>
     <div *ngSwitchCase="'number'" class="input-layout">
       <div class="input-label">{{ model.displayInfo.displayName }}</div>
@@ -66,12 +67,18 @@
         </div>
       </div>
     </div>
-    <!-- <div *ngSwitchDefault>{{ model | jsonStringify }}</div> -->
     <div *ngSwitchDefault class="input-layout">
       <div class="input-label">{{ model.displayInfo.displayName }}</div>
       <span [title]="model | jsonStringify" style="color: #888">暂不支持的属性</span>
     </div>
   </ng-container>
+</ng-template>
+
+<ng-template #stringColorGroup let-model="model" let-data="data">
+  <div class="input-content">
+    <input nz-input [placeholder]="'请输入' + model.displayInfo.displayName" [(ngModel)]="data.value" />
+    <div *ngIf="isColor(data.value)" class="color-preview" [style.background]="data.value"></div>
+  </div>
 </ng-template>
 
 <ng-template #numberGroup let-model="model" let-data="data">
@@ -162,8 +169,20 @@
     line-height: 32px;
   }
 
-  .input-layout input {
+  .input-layout .input-content {
     flex: 1;
+    display: flex;
+  }
+
+  .input-content input {
+    border-radius: 0;
+  }
+
+  .input-content .color-preview {
+    background: #888;
+    margin-left: 8px;
+    width: 32px;
+    height: 32px;
   }
 
   .map-layout {
