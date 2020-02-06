@@ -1,6 +1,5 @@
 <app-portal-layout>
   <div class="buttons-group">
-    <button class="button-item" nz-button nzType="primary" (click)="showModal()">新建</button>
     <nz-button-group class="button-item">
       <button nz-button [nzType]="showEditor === 'view'? 'primary': 'default'" (click)="onEditorClick('view')">
         视图
@@ -40,8 +39,7 @@
       <app-portal-source-tree
         *ngIf="showEditor === 'view'"
         [context]="createContext"
-        (onEntityClick)="editEntityOpenModal($event)"
-        (onEntityDelete)="deleteEntityFromContext($event)"
+        (onContextChange)="onContextChange($event)"
       ></app-portal-source-tree>
     </div>
     <div [class.editor-column-hidden]="!showPreview.preview" class="editor-column preview-container">
@@ -83,40 +81,9 @@
   </div>
 </ng-template>
 
-<ng-template #modalContent>
-  <div *ngIf="tempEntityData" class="edit-goback" (click)="editGoBack()">
-    <i nz-icon nzType="left" nzTheme="outline"></i>
-    <span>后退</span>
-  </div>
-  <div class="model-slide-group">
-    <div class="model-slide-selectlist" *ngIf="!tempEntityData">
-      <app-portal-module-list (onEntityCreate)="onEntityCreate($event)"></app-portal-module-list>
-    </div>
-    <div class="model-slide-edit" *ngIf="tempEntityData">
-      <app-portal-entity-edit
-        [target]="tempEntityData"
-        [context]="createContext"
-        [parents]="parentPaths"
-        (onComplete)="onEmit($event)"
-      ></app-portal-entity-edit>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #deleteModalContext>
-  <div *ngIf="willDelete">
-    <div>节点类型：{{ willDelete.displayInfo.displayName }}</div>
-    <div>节点ID：{{ willDelete.id }}</div>
-  </div>
-</ng-template>
-
 <style>
   :host ::ng-deep iframe {
     border-width: 0;
-  }
-
-  .start-button {
-    margin-bottom: 8px;
   }
 
   .buttons-group {
@@ -192,40 +159,6 @@
     position: absolute;
     text-align: center;
     padding-top: 20vh;
-  }
-
-  .model-slide-group {
-    display: flex;
-    height: 60vh;
-  }
-
-  .model-slide-selectlist {
-    flex: 1;
-    overflow-y: auto;
-  }
-
-  .model-slide-edit {
-    flex: 1;
-    overflow-y: auto;
-    margin: -4px;
-  }
-
-  .edit-goback {
-    display: inline-block;
-    margin-left: -12px;
-    margin-top: -24px;
-    margin-bottom: 4px;
-    padding: 6px 12px;
-    cursor: pointer;
-    font-weight: 500;
-    color: #1890ff;
-    height: 36px;
-  }
-
-  .edit-goback i {
-    margin-right: 4px;
-    font-weight: 500;
-    color: #1890ff;
   }
 
   .circle-mac {

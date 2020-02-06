@@ -1,32 +1,64 @@
 import get from "lodash/get";
 import cloneDeep from "lodash/cloneDeep";
 import { Component, OnDestroy, OnInit, Input, OnChanges, Output, EventEmitter } from "@angular/core";
-import { Builder, ICompileContext } from "../../services/builder.service";
+import {
+  Builder,
+  ICompileContext,
+  IInputDefine,
+  ICompileTypeMeta,
+  IGroupDefine,
+  IComponentChildDefine,
+  IDirectiveChildDefine,
+} from "../../services/builder.service";
 import { IEntityCreate } from "../module-list/module-list.component";
+
+interface IDataInput {
+  value: number | string | [any, any][] | null;
+  type: ICompileTypeMeta;
+  selectList?: boolean;
+  enumValues?: { key: string | number; value: any }[];
+  typeCheck?: (v: any) => boolean;
+}
 
 interface IEntityContext {
   init: boolean;
   displayName: string;
   idVersion: string;
   inputs: IGroup[];
-  attaches: any[];
+  attaches: IInputDefine[];
   data: {
-    inputs: Record<string, any>;
+    inputs: Record<string, IDataInput>;
   };
 }
 
 interface IScope {}
 
+type IDisplayInput = IInputDefine & {
+  displayInfo: {
+    displayName: string | null;
+    fullname: string;
+  };
+};
+
 interface IGroup {
   name: string;
-  children: any[];
+  children: IDisplayInput[];
   displayInfo: {
     displayName: string | null;
   };
 }
 
-interface IEntityEdit extends IEntityCreate {
-  source?: any;
+export interface IEntityEdit extends IEntityCreate {
+  source?: IComponentChildDefine | IDirectiveChildDefine;
+}
+
+export interface IEntityEditResult {
+  id: string;
+  module: string;
+  name: string;
+  type: "component" | "directive";
+  version: string | number;
+  input: Record<string, any>;
 }
 
 const DEFAULT_ENUM_VALUE_LABEL = "默认值";
@@ -47,7 +79,7 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
   parents: string[] = [];
 
   @Output()
-  onComplete = new EventEmitter<any>();
+  onComplete = new EventEmitter<IEntityEditResult>();
 
   public entity!: IEntityContext;
   public scope: IScope = {};
@@ -55,9 +87,6 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
   constructor(private builder: Builder) {}
 
   ngOnInit(): void {
-    console.log(this.target);
-    console.log(this.context);
-    console.log(this.parents);
     this.initContext(this.target);
   }
 
@@ -76,47 +105,52 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
     const { data } = this.entity;
     this.clearData(data);
     this.formatData(data);
+    const { inputs } = data;
     this.onComplete.emit({
       id: this.target.id,
       module: this.target.module,
       name: this.target.name,
-      ...data,
+      type: this.target.type,
+      version: this.target.version,
+      input: inputs,
     });
   }
 
   isColor(value: string | null) {
     if (typeof value !== "string") return false;
-    return /^#[0-9abcdefABCDEF]{6,8}$/.test(value);
+    if (/^#[0-9abcdefABCDEF]{6,8}$/.test(value)) return true;
+    if (/^rgb(a?)\([0-9]{1,3},\s*[0-9]{1,3},\s*[0-9]{1,3}(,\s*[0-9]{1,3})?\);?$/.test(value)) return true;
+    return false;
   }
 
   onModelChange() {
     // console.log(this.entity.data);
   }
 
-  addMapEntry(model: any) {
+  addMapEntry(model: IDisplayInput) {
     const value = this.entity.data.inputs[model.displayInfo.fullname].value;
     const keys = model.type.mapInfo.key;
     if (Array.isArray(keys) && keys.length > 0) {
       for (const willKey of keys) {
-        if (value.findIndex((i: any) => i[0] === willKey) >= 0) {
+        if ((<any[]>value).findIndex((i: any) => i[0] === willKey) >= 0) {
           continue;
         }
-        value.push([willKey, null]);
+        (<any[]>value).push([willKey, null]);
         break;
       }
     }
     if (typeof keys === "function" || typeof keys === "string") {
-      value.push([null, null]);
+      (<any[]>value).push([null, null]);
     }
     // console.log(model, this.entity.data.inputs[model.displayInfo.fullname]);
   }
 
-  removeMapEntry(model: any, index: number) {
+  removeMapEntry(model: IDisplayInput, index: number) {
     const value = this.entity.data.inputs[model.displayInfo.fullname].value;
     (<any[]>value).splice(index, 1);
   }
 
-  clearNumberValue(model: any) {
+  clearNumberValue(model: IDisplayInput) {
     this.entity.data.inputs[model.displayInfo.fullname].value = null;
   }
 
@@ -125,7 +159,7 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
     this.entity.displayName = model.displayName || model.name;
     this.entity.idVersion = `${model.module}/${model.name}@${model.version}`;
     this.entity.attaches = Object.entries(model.metadata.attaches).map(([, d]) => d);
-    const groups: Record<string, any> = {
+    const groups: Record<string, IGroup> = {
       default: {
         name: "default",
         children: [],
@@ -134,7 +168,7 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
         },
       },
     };
-    Object.entries<any>(model.metadata.groups).forEach(
+    Object.entries(model.metadata.groups).forEach(
       ([name, group]) =>
         (groups[name] = {
           name: group.name.value,
@@ -144,7 +178,7 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
           },
         }),
     );
-    Object.entries<any>(model.metadata.inputs).forEach(([, d]) => {
+    Object.entries(model.metadata.inputs).forEach(([, d]) => {
       const groupName = d.group || "default";
       const fullname = `${d.group || "default"}.${d.name.value}`;
       const propertyPath = !d.group ? d.name.value : `${d.group}.${d.name.value}`;
@@ -159,29 +193,10 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
     });
     this.entity.inputs = Object.entries(groups).map(([, g]) => g);
     this.entity.init = true;
-    // to DEBUG
-    // console.log(this.context);
-    // if (this.parents.length > 0) {
-    //   const [page, ...others] = this.parents;
-    //   if (page) {
-    //     let x: any;
-    //     const childList = this.context.page.children || [];
-    //     if (others.length === 0) {
-    //       this.scope = this.context.page;
-    //       return;
-    //     }
-    //     for (const id of others) {
-    //       x = childList.find(i => i.id === id);
-    //       if (!x) break;
-    //     }
-    //     if (!x) return;
-    //     this.scope = x;
-    //   }
-    // }
   }
 
-  private initItemNgModel(fullname: string, propertyPath: string, model: IEntityEdit, d: any) {
-    const ngModel: any = (this.entity.data.inputs[fullname] = {
+  private initItemNgModel(fullname: string, propertyPath: string, model: IEntityEdit, d: IInputDefine) {
+    const ngModel: IDataInput = (this.entity.data.inputs[fullname] = {
       value: null,
       type: d.type.meta,
     });
@@ -194,20 +209,20 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
       const keys = d.type.mapInfo.key;
       ngModel.selectList = false;
       if (Array.isArray(keys)) {
-        ngModel.typeCheck = (v: any) => keys.includes(v);
+        ngModel.typeCheck = v => keys.includes(v);
         ngModel.selectList = true;
       }
       if (typeof keys === "function") {
-        ngModel.typeCheck = (v: any) => keys(v);
+        ngModel.typeCheck = v => keys(v);
       }
       if (typeof keys === "string") {
-        ngModel.typeCheck = (v: any) => typeof v === "string";
+        ngModel.typeCheck = v => typeof v === "string";
       }
     } else if (d.type.meta === "enums") {
       ngModel.value = sourceValue === null ? DEFAULT_ENUM_VALUE : sourceValue.expression;
       const keys = d.type.enumsInfo;
       ngModel.selectList = false;
-      const otherOptions = keys.map((k: string) => ({ key: k, value: k }));
+      const otherOptions = keys.map(k => ({ key: k, value: k }));
       ngModel.enumValues = [{ key: DEFAULT_ENUM_VALUE_LABEL, value: DEFAULT_ENUM_VALUE }, ...otherOptions];
       if (Array.isArray(keys)) {
         ngModel.typeCheck = (v: any) => keys.includes(v);
@@ -216,7 +231,7 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  private clearData(data: { inputs: Record<string, any> }) {
+  private clearData(data: { inputs: Record<string, IDataInput> }) {
     for (const key in data.inputs) {
       if (data.inputs.hasOwnProperty(key)) {
         const element = data.inputs[key];
@@ -224,13 +239,15 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
           if (element.value === null) {
             delete data.inputs[key];
           }
+          continue;
         } else if (element.type === "map") {
           if (Array.isArray(element.value)) {
             if (element.value.length === 0) {
               delete data.inputs[key];
             }
-            element.value = element.value.filter((i: any) => i[1] !== null);
+            element.value = element.value.filter(i => i[1] !== null);
           }
+          continue;
         } else if (element.type === "enums") {
           if (element.value === DEFAULT_ENUM_VALUE) {
             delete data.inputs[key];
@@ -240,7 +257,7 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  private formatData(data: { inputs: Record<string, any> }) {
+  private formatData(data: { inputs: Record<string, IDataInput> }) {
     const newInputs: Record<string, any> = {};
     for (const key in data.inputs) {
       if (data.inputs.hasOwnProperty(key)) {
@@ -257,7 +274,7 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
   }
 }
 
-function createDisplayName(d: any) {
+function createDisplayName(d: IInputDefine | IGroupDefine) {
   return d.name.displayValue !== d.name.value && !!d.name.displayValue
     ? `${d.name.displayValue} (${d.name.value})`
     : d.name.value;

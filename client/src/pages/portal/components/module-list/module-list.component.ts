@@ -1,13 +1,27 @@
 import { Component, OnDestroy, OnInit, Output, EventEmitter, ChangeDetectionStrategy } from "@angular/core";
-import { Builder } from "../../services/builder.service";
+import { Builder, ICompileModule, IImportDeclaration } from "../../services/builder.service";
 
 export interface IEntityCreate {
   id: string;
+  type: "component" | "directive";
   module: string;
   name: string;
   displayName: string | null;
   version: string | number;
-  metadata: Record<string, any>;
+  metadata: IImportDeclaration["metadata"];
+}
+
+export interface IDisplayImport extends IImportDeclaration {
+  displayInfo: { displayName: string };
+}
+
+export interface IDisplayModule extends Omit<ICompileModule, "components" | "directives"> {
+  components: IDisplayImport[];
+  directives: IDisplayImport[];
+  displayInfo: {
+    displayName: string;
+    expanded: boolean;
+  };
 }
 
 @Component({
@@ -19,7 +33,7 @@ export class ModuleListComponent implements OnInit, OnDestroy {
   @Output()
   onEntityCreate = new EventEmitter<IEntityCreate>();
 
-  public moduleList: any[] = [];
+  public moduleList: IDisplayModule[] = [];
 
   constructor(private builder: Builder) {}
 
@@ -29,10 +43,10 @@ export class ModuleListComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {}
 
-  onEntityClick(target: any) {
-    console.log(target);
+  onEntityClick(target: IDisplayImport, type: "component" | "directive") {
     this.onEntityCreate.emit({
       id: this.builder.Utils.createEntityId(),
+      type,
       module: target.moduleName,
       name: target.name,
       displayName: target.displayName === target.name ? null : target.displayName,
@@ -46,14 +60,14 @@ export class ModuleListComponent implements OnInit, OnDestroy {
   }
 
   private initModuleList() {
-    this.moduleList = this.builder.moduleList.map(i => {
+    this.moduleList = this.builder.moduleList.map<IDisplayModule>(i => {
       return {
         ...i,
-        components: (i.components || []).map((e: any) => ({
+        components: (i.components || []).map<IDisplayImport>(e => ({
           ...e,
           displayInfo: { displayName: createDisplayName(e) },
         })),
-        directives: (i.directives || []).map((e: any) => ({
+        directives: (i.directives || []).map<IDisplayImport>(e => ({
           ...e,
           displayInfo: { displayName: createDisplayName(e) },
         })),

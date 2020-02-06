@@ -42,7 +42,7 @@
 <ng-template #entityGroup let-model="model" let-type="type">
   <div class="entity-group">
     <i nz-icon [nzType]=" type === 'component' ? 'appstore': 'api' " nzTheme="outline"></i>
-    <div (click)="onEntityClick(model)">{{ model.displayInfo.displayName }}</div>
+    <div (click)="onEntityClick(model, type)">{{ model.displayInfo.displayName }}</div>
   </div>
 </ng-template>
 

@@ -1,12 +1,13 @@
 import SDK from "@stackblitz/sdk";
 import yamljs from "js-yaml";
+import debounce from "lodash/debounce";
 import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, TemplateRef, Renderer2 } from "@angular/core";
-import { NzMessageService, NzModalService, NzModalRef } from "ng-zorro-antd";
+import { NzMessageService } from "ng-zorro-antd";
 import { Project } from "@stackblitz/sdk/typings/interfaces";
 import { VM } from "@stackblitz/sdk/typings/VM";
 import { PortalService } from "../services/portal.service";
-import { Builder, ICompileContext } from "../services/builder.service";
-import { EntityEditComponent } from "../components/entity-edit/entity-edit.component";
+import { ICompileContext } from "../services/builder.service";
+import { callContextValidation } from "../components/source-tree/source-tree.component";
 
 const CommonDepts = {
   "@types/react": "^16.9.7",
@@ -20,8 +21,6 @@ const CommonDepts = {
 export class PortalPreviewComponent implements OnInit, AfterViewInit {
   @ViewChild("previewRender", { static: false }) previewRender: ElementRef;
   @ViewChild("previewTpl", { static: false }) previewTpl: TemplateRef<HTMLDivElement>;
-  @ViewChild("modalContent", { static: false }) modalContent: TemplateRef<any>;
-  @ViewChild("deleteModalContext", { static: false }) deleteModalContext: TemplateRef<any>;
 
   public showButton = false;
   public showEditor: "view" | "config" | "hide" = "view";
@@ -31,22 +30,8 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
   };
 
   public lastDepts: Record<string, string> = {};
-  public tempEntityData!: any;
-  public modelRef!: NzModalRef;
-
-  public parentPaths: string[] = [];
   public createContext = createDefaultConfigs();
   public pageConfigs = yamljs.safeDump(this.createContext);
-
-  public lastModalOk = false;
-  public lastModalType!: "create" | "edit";
-
-  public willDelete!: any;
-
-  public get lastDeptKvs() {
-    return Object.entries(this.lastDepts);
-  }
-
   public vm!: VM;
 
   private project: Project = {
@@ -68,13 +53,13 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
     },
   };
 
-  constructor(
-    private renderer: Renderer2,
-    private portal: PortalService,
-    private message: NzMessageService,
-    private modal: NzModalService,
-    private builder: Builder,
-  ) {}
+  public get lastDeptKvs() {
+    return Object.entries(this.lastDepts);
+  }
+
+  constructor(private renderer: Renderer2, private portal: PortalService, private message: NzMessageService) {
+    this.onTextareaChange = debounce(this.onTextareaChange.bind(this), 500);
+  }
 
   ngOnInit() {
     // console.log(this.builder.moduleList);
@@ -93,115 +78,27 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
 
   onPreviewClick(target: any) {
     this.showPreview[target] = !this.showPreview[target];
-    this.trackPreviewIfNeed(this.createContext);
-  }
-
-  onEntityCreate(e: any) {
-    this.tempEntityData = e;
-    if (this.modelRef) {
-      this.modelRef.getInstance().nzWidth = "800px";
-    }
-  }
-
-  editGoBack() {
-    this.tempEntityData = null;
-    if (this.modelRef) {
-      this.modelRef.getInstance().nzWidth = "500px";
-    }
-  }
-
-  showModal() {
-    if (this.modelRef) {
-      this.modelRef.destroy();
-    }
-    this.lastModalOk = false;
-    this.lastModalType = "create";
-    this.modelRef = this.modal.create({
-      nzTitle: "创建节点",
-      nzContent: this.modalContent,
-      nzWidth: "500px",
-      nzOnOk: () => {
-        this.tempEntityData = null;
-        this.parentPaths = [];
-        this.lastModalOk = true;
-      },
-      nzOnCancel: () => {
-        this.tempEntityData = null;
-        this.parentPaths = [];
-      },
-    });
-  }
-
-  editEntityOpenModal({ model, meta, paths }: any) {
-    if (this.modelRef) {
-      this.modelRef.destroy();
-    }
-    this.lastModalOk = false;
-    this.lastModalType = "edit";
-    this.modelRef = this.modal.create({
-      nzTitle: "编辑节点",
-      nzContent: EntityEditComponent,
-      nzWidth: "800px",
-      nzBodyStyle: {
-        height: "64vh",
-        "overflow-y": "auto",
-      },
-      nzComponentParams: {
-        context: this.createContext,
-        target: {
-          id: model.id,
-          module: meta.moduleName,
-          name: meta.name,
-          displayName: meta.displayName === meta.name ? null : meta.displayName,
-          version: meta.metadata.entity.version,
-          metadata: meta.metadata,
-          source: model,
-        },
-        parents: paths,
-      },
-      nzOnOk: () => {
-        this.tempEntityData = null;
-        this.parentPaths = [];
-        this.lastModalOk = true;
-      },
-      nzOnCancel: () => {
-        this.tempEntityData = null;
-        this.parentPaths = [];
-      },
-    });
-  }
-
-  onEmit(e: any) {
-    console.log(e);
-  }
-
-  deleteEntityFromContext({ found, transform }: any) {
-    this.willDelete = found;
-    const ref = this.modal.warning({
-      nzTitle: "确认删除节点吗?",
-      nzCancelText: "Cancel",
-      nzContent: this.deleteModalContext,
-      nzOnOk: () => {
-        this.createContext = transform(this.createContext);
-        this.trackPreviewIfNeed(this.createContext);
-        ref.destroy();
-        this.willDelete = null;
-      },
-      nzOnCancel: () => {
-        ref.destroy();
-        this.willDelete = null;
-      },
-    });
+    this.trackPreviewIfNeed();
   }
 
   onTextareaChange(value: string) {
-    this.createContext = yamljs.safeLoad(value);
-    this.trackPreviewIfNeed(this.createContext);
+    try {
+      this.createContext = callContextValidation(yamljs.safeLoad(value));
+      this.trackPreviewIfNeed();
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  onContextChange(context: any) {
+    this.createContext = context;
+    // console.log(context);
+    this.trackPreviewIfNeed();
   }
 
   private async runUpdate(confs?: any) {
     try {
-      const configs = confs || yamljs.safeLoad(this.pageConfigs);
+      const configs = confs || this.createContext;
       const result = await this.portal.createSource(configs);
       const hasDeptsChange = this.checkIfAllEqual(result.data.dependencies);
       if (this.vm && hasDeptsChange) {
