@@ -21,6 +21,7 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
   @ViewChild("previewRender", { static: false }) previewRender: ElementRef;
   @ViewChild("previewTpl", { static: false }) previewTpl: TemplateRef<HTMLDivElement>;
   @ViewChild("modalContent", { static: false }) modalContent: TemplateRef<any>;
+  @ViewChild("deleteModalContext", { static: false }) deleteModalContext: TemplateRef<any>;
 
   public showButton = false;
   public showEditor: "view" | "config" | "hide" = "view";
@@ -39,6 +40,8 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
 
   public lastModalOk = false;
   public lastModalType!: "create" | "edit";
+
+  public willDelete!: any;
 
   public get lastDeptKvs() {
     return Object.entries(this.lastDepts);
@@ -172,9 +175,22 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
   }
 
   deleteEntityFromContext({ found, transform }: any) {
-    this.createContext = transform(this.createContext);
-    console.log(this.createContext);
-    this.trackPreviewIfNeed(this.createContext);
+    this.willDelete = found;
+    const ref = this.modal.warning({
+      nzTitle: "确认删除节点吗?",
+      nzCancelText: "Cancel",
+      nzContent: this.deleteModalContext,
+      nzOnOk: () => {
+        this.createContext = transform(this.createContext);
+        this.trackPreviewIfNeed(this.createContext);
+        ref.destroy();
+        this.willDelete = null;
+      },
+      nzOnCancel: () => {
+        ref.destroy();
+        this.willDelete = null;
+      },
+    });
   }
 
   onTextareaChange(value: string) {

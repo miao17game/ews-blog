@@ -103,6 +103,13 @@
   </div>
 </ng-template>
 
+<ng-template #deleteModalContext>
+  <div *ngIf="willDelete">
+    <div>节点类型：{{ willDelete.displayInfo.displayName }}</div>
+    <div>节点ID：{{ willDelete.id }}</div>
+  </div>
+</ng-template>
+
 <style>
   :host ::ng-deep iframe {
     border-width: 0;

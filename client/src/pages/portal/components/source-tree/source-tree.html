@@ -16,7 +16,7 @@
 </ng-template>
 
 <ng-template #entityDecla let-model="model" let-paths="paths">
-  <div *ngIf="model" class="section">
+  <div *ngIf="model" class="section" [class.not-root]="!!paths">
     <div class="entity-decla">
       <div class="entity-title">
         <div>
@@ -75,6 +75,10 @@
 
   .section {
     margin: 8px;
+  }
+
+  .not-root {
+    margin-right: -1px;
   }
 
   .import-decla {
