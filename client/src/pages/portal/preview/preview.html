@@ -94,7 +94,7 @@
     </div>
     <div class="model-slide-edit" *ngIf="tempEntityData">
       <app-portal-entity-edit
-        [model]="tempEntityData"
+        [target]="tempEntityData"
         [context]="createContext"
         [parents]="parentPaths"
         (onComplete)="onEmit($event)"

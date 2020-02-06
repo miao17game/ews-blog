@@ -1,12 +1,34 @@
 <div *ngIf="tree">
-  <div class="section" *ngFor="let comp of tree.components">
-    <ng-container *ngTemplateOutlet="importDecla; context: { model: comp, type: 'component' }"></ng-container>
-  </div>
-  <div class="section" *ngFor="let dire of tree.directives">
-    <ng-container *ngTemplateOutlet="importDecla; context: { model: dire, type: 'directive' }"></ng-container>
-  </div>
+  <ng-container *ngTemplateOutlet="importGroup; context: { enabled: true, type: 'component' }"></ng-container>
+  <ng-container *ngTemplateOutlet="importGroup; context: { enabled: true, type: 'directive' }"></ng-container>
   <ng-container *ngTemplateOutlet="entityDecla; context: { model: tree.page, paths: undefined }"></ng-container>
 </div>
+
+<ng-template #importGroup let-enabled="enabled" let-type="type">
+  <div class="section">
+    <div class="common-decla">
+      <div class="common-title">
+        <div>
+          <ng-container
+            *ngTemplateOutlet="expandButton; context: {
+              model: model,
+              enabled: enabled,
+              type: type,
+              expanded: type === 'component'? tree.compExpanded: tree.direExpanded
+            }"
+          ></ng-container>
+          <i nz-icon [nzType]=" type === 'component' ? 'appstore': 'api' " nzTheme="outline"></i>
+          <span>{{ type === 'component'? '组件': '指令' }}</span>
+        </div>
+      </div>
+      <ng-container *ngIf="type === 'component'? tree.compExpanded: tree.direExpanded">
+        <div class="section" *ngFor="let comp of tree[type + 's']">
+          <ng-container *ngTemplateOutlet="importDecla; context: { model: comp, type: type }"></ng-container>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</ng-template>
 
 <ng-template #importDecla let-model="model" let-type="type">
   <div class="import-decla">
@@ -17,8 +39,8 @@
 
 <ng-template #entityDecla let-model="model" let-paths="paths">
   <div *ngIf="model" class="section" [class.not-root]="!!paths">
-    <div class="entity-decla">
-      <div class="entity-title">
+    <div class="common-decla">
+      <div class="common-title">
         <ng-container *ngTemplateOutlet="entityTitleContent; context: { model: model }"></ng-container>
         <ng-container *ngTemplateOutlet="entityActions; context: { model: model, paths: paths }"></ng-container>
       </div>
@@ -38,7 +60,14 @@
 
 <ng-template #entityTitleContent let-model="model">
   <div>
-    <ng-container *ngTemplateOutlet="expandButton; context: { model: model }"></ng-container>
+    <ng-container
+      *ngTemplateOutlet="expandButton; context: {
+        model: model,
+        enabled: model.children && model.children.length > 0,
+        expanded: !!model.displayInfo.expanded,
+        type: 'entity'
+      }"
+    ></ng-container>
     <i nz-icon nzType="layout" nzTheme="outline"></i>
     <span [title]="model.id">{{ model.displayInfo.displayName }}</span>
   </div>
@@ -52,21 +81,15 @@
   </div>
 </ng-template>
 
-<ng-template #expandButton let-model="model">
+<ng-template #expandButton let-model="model" let-type="type" let-enabled="enabled" let-expanded="expanded">
   <i
-    *ngIf="model.children && model.children.length > 0"
+    *ngIf="enabled"
     nz-icon
-    [nzType]="!model.displayInfo.expanded? 'plus-circle': 'minus-circle'"
+    [nzType]="!expanded? 'plus-circle': 'minus-circle'"
     nzTheme="outline"
-    (click)="onEntityExpand(model)"
+    (click)="type === 'entity'? onEntityExpand(model): onGroupExpand(type)"
   ></i>
-  <i
-    *ngIf="!model.children || model.children.length === 0"
-    style="color: #888888"
-    nz-icon
-    nzType="stop"
-    nzTheme="outline"
-  ></i>
+  <i *ngIf="!enabled" style="color: #888888" nz-icon nzType="stop" nzTheme="outline"></i>
 </ng-template>
 
 <style>
@@ -96,7 +119,7 @@
     background: #f6f6f6;
   }
 
-  .entity-decla {
+  .common-decla {
     border: 1px solid #ececec;
     background: #fff;
     padding: 0;
@@ -107,7 +130,7 @@
     margin-right: 4px;
   }
 
-  .entity-title {
+  .common-title {
     display: flex;
     justify-content: space-between;
     padding: 4px;
@@ -118,19 +141,19 @@
     padding-right: 4px;
   }
 
-  .entity-title .entity-actions {
+  .common-title .entity-actions {
     visibility: hidden;
   }
 
-  .entity-title:hover {
+  .common-title:hover {
     background: #f6f6f6;
   }
 
-  .entity-title:hover .entity-actions {
+  .common-title:hover .entity-actions {
     visibility: visible;
   }
 
-  .entity-title i {
+  .common-title i {
     margin-right: 4px;
   }
 

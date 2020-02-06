@@ -38,7 +38,7 @@ const DEFAULT_ENUM_VALUE = "?##default##?";
 })
 export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
   @Input()
-  model: IEntityEdit;
+  target: IEntityEdit;
 
   @Input()
   context: ICompileContext;
@@ -55,10 +55,10 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
   constructor(private builder: Builder) {}
 
   ngOnInit(): void {
-    console.log(this.model);
+    console.log(this.target);
     console.log(this.context);
     console.log(this.parents);
-    this.initContext(this.model);
+    this.initContext(this.target);
   }
 
   ngOnChanges(changes: import("@angular/core").SimpleChanges): void {
@@ -77,9 +77,9 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
     this.clearData(data);
     this.formatData(data);
     this.onComplete.emit({
-      id: this.model.id,
-      module: this.model.module,
-      name: this.model.name,
+      id: this.target.id,
+      module: this.target.module,
+      name: this.target.name,
       ...data,
     });
   }

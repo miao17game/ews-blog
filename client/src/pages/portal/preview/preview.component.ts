@@ -47,7 +47,8 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
     return Object.entries(this.lastDepts);
   }
 
-  private vm!: VM;
+  public vm!: VM;
+
   private project: Project = {
     files: {
       "public/index.html": `<div id="app"></div>`,
@@ -98,14 +99,14 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
   onEntityCreate(e: any) {
     this.tempEntityData = e;
     if (this.modelRef) {
-      this.modelRef.getInstance().nzWidth = "80vw";
+      this.modelRef.getInstance().nzWidth = "800px";
     }
   }
 
   editGoBack() {
     this.tempEntityData = null;
     if (this.modelRef) {
-      this.modelRef.getInstance().nzWidth = "40vw";
+      this.modelRef.getInstance().nzWidth = "500px";
     }
   }
 
@@ -118,7 +119,7 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
     this.modelRef = this.modal.create({
       nzTitle: "创建节点",
       nzContent: this.modalContent,
-      nzWidth: "40vw",
+      nzWidth: "500px",
       nzOnOk: () => {
         this.tempEntityData = null;
         this.parentPaths = [];
@@ -140,14 +141,14 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
     this.modelRef = this.modal.create({
       nzTitle: "编辑节点",
       nzContent: EntityEditComponent,
-      nzWidth: "80vw",
+      nzWidth: "800px",
       nzBodyStyle: {
         height: "64vh",
         "overflow-y": "auto",
       },
       nzComponentParams: {
         context: this.createContext,
-        model: {
+        target: {
           id: model.id,
           module: meta.moduleName,
           name: meta.name,

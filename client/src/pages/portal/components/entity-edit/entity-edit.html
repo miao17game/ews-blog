@@ -47,7 +47,7 @@
       <div class="map-layout-title">
         <div class="map-label">{{ model.displayInfo.displayName }}</div>
         <div class="map-add-btn">
-          <button nz-button nzType="primary" (click)="addMapEntry(model)">+</button>
+          <button nz-button nzSize="small" nzType="primary" (click)="addMapEntry(model)">+</button>
           <ng-container *ngTemplateOutlet="mapItemGroup; context: { model: model, data: data }"></ng-container>
         </div>
       </div>
@@ -82,7 +82,7 @@
 </ng-template>
 
 <ng-template #mapItemGroup let-model="model" let-data="data">
-  <div class="map-select-line" *ngFor="let item of data.value; let idx = index">
+  <div class="map-select-line" *ngFor="let item of data.value; let idx = index;">
     <input class="x-label" *ngIf="!data.selectList" nz-input [(ngModel)]="item[0]" />
     <nz-select class="x-label" *ngIf="data.selectList" [(ngModel)]="item[0]">
       <nz-option *ngFor="let option of model.type.mapInfo.key" [nzLabel]="option" [nzValue]="option"></nz-option>
@@ -187,6 +187,7 @@
 
   .map-layout-title .map-add-btn {
     flex: 1;
+    padding-top: 8px;
   }
 
   .map-select-line {

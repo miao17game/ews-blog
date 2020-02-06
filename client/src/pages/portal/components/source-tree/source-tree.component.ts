@@ -19,6 +19,8 @@ type IDisplay<T> = T & {
 interface ISourceTree {
   components: IDisplay<IComponentDefine>[];
   directives: IDisplay<IDirectiveDefine>[];
+  compExpanded: boolean;
+  direExpanded: boolean;
   page?: IDisplay<IDisplayEntity>;
 }
 
@@ -132,6 +134,14 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
     entity.displayInfo.expanded = !entity.displayInfo.expanded;
   }
 
+  public onGroupExpand(type: "component" | "directive") {
+    if (type === "component") {
+      this.tree.compExpanded = !this.tree.compExpanded;
+    } else {
+      this.tree.direExpanded = !this.tree.direExpanded;
+    }
+  }
+
   public checkIfShowChildren(entity: IDisplay<IPageDefine>) {
     return entity.children && entity.children.length > 0 && entity.displayInfo.expanded;
   }
@@ -155,6 +165,8 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
       page: null,
       directives,
       components,
+      compExpanded: false,
+      direExpanded: false,
     };
     if (context.page) {
       this.tree.page = context.page && this.getEntityDisplayName(context.page);
