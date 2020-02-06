@@ -19,22 +19,8 @@
   <div *ngIf="model" class="section" [class.not-root]="!!paths">
     <div class="entity-decla">
       <div class="entity-title">
-        <div>
-          <ng-container *ngTemplateOutlet="expandButton; context: { model: model }"></ng-container>
-          <i nz-icon nzType="layout" nzTheme="outline"></i>
-          <span [title]="model.id">{{ model.displayInfo.displayName }}</span>
-        </div>
-        <div class="entity-actions">
-          <i nz-icon nzType="plus-square" nzTheme="outline" (click)="onEntityCreateClick(model, paths)"></i>
-          <i nz-icon nzType="form" nzTheme="outline" (click)="onEntityEditClick(model, paths)"></i>
-          <i
-            nz-icon
-            nzType="delete"
-            nzTheme="outline"
-            (click)="onEntityDeleteClick(model, paths)"
-            class="delete-btn"
-          ></i>
-        </div>
+        <ng-container *ngTemplateOutlet="entityTitleContent; context: { model: model }"></ng-container>
+        <ng-container *ngTemplateOutlet="entityActions; context: { model: model, paths: paths }"></ng-container>
       </div>
       <div class="entity-children" *ngIf="checkIfShowChildren(model)">
         <ng-container *ngFor="let childNode of model.children">
@@ -47,6 +33,22 @@
         </ng-container>
       </div>
     </div>
+  </div>
+</ng-template>
+
+<ng-template #entityTitleContent let-model="model">
+  <div>
+    <ng-container *ngTemplateOutlet="expandButton; context: { model: model }"></ng-container>
+    <i nz-icon nzType="layout" nzTheme="outline"></i>
+    <span [title]="model.id">{{ model.displayInfo.displayName }}</span>
+  </div>
+</ng-template>
+
+<ng-template #entityActions let-model="model" let-paths="paths">
+  <div class="entity-actions">
+    <i nz-icon nzType="plus-square" nzTheme="outline" (click)="onEntityCreateClick(model, paths)"></i>
+    <i nz-icon nzType="form" nzTheme="outline" (click)="onEntityEditClick(model, paths)"></i>
+    <i nz-icon nzType="delete" nzTheme="outline" (click)="onEntityDeleteClick(model, paths)" class="delete-btn"></i>
   </div>
 </ng-template>
 
