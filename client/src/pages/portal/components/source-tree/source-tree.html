@@ -16,12 +16,24 @@
 </ng-template>
 
 <ng-template #entityDecla let-model="model" let-paths="paths">
-  <div class="section">
+  <div *ngIf="model" class="section">
     <div class="entity-decla">
       <div class="entity-title">
-        <ng-container *ngTemplateOutlet="expandButton; context: { model: model }"></ng-container>
-        <i nz-icon nzType="layout" nzTheme="outline"></i>
-        <span [title]="model.id" (click)="onEntityEditClick(model, paths)">{{ model.displayInfo.displayName }}</span>
+        <div>
+          <ng-container *ngTemplateOutlet="expandButton; context: { model: model }"></ng-container>
+          <i nz-icon nzType="layout" nzTheme="outline"></i>
+          <span [title]="model.id">{{ model.displayInfo.displayName }}</span>
+        </div>
+        <div class="entity-actions">
+          <i nz-icon nzType="form" nzTheme="outline" (click)="onEntityEditClick(model, paths)"></i>
+          <i
+            nz-icon
+            nzType="delete"
+            nzTheme="outline"
+            (click)="onEntityDeleteClick(model, paths)"
+            class="delete-btn"
+          ></i>
+        </div>
       </div>
       <div class="entity-children" *ngIf="checkIfShowChildren(model)">
         <ng-container *ngFor="let childNode of model.children">
@@ -41,9 +53,16 @@
   <i
     *ngIf="model.children && model.children.length > 0"
     nz-icon
-    [nzType]="!model.displayInfo.expanded? 'right': 'down'"
+    [nzType]="!model.displayInfo.expanded? 'plus-circle': 'minus-circle'"
     nzTheme="outline"
     (click)="onEntityExpand(model)"
+  ></i>
+  <i
+    *ngIf="!model.children || model.children.length === 0"
+    style="color: #888888"
+    nz-icon
+    nzType="stop"
+    nzTheme="outline"
   ></i>
 </ng-template>
 
@@ -82,8 +101,14 @@
   }
 
   .entity-title {
+    display: flex;
+    justify-content: space-between;
     padding: 4px;
     transition: background 0.35s;
+  }
+
+  .entity-actions {
+    padding-right: 4px;
   }
 
   .entity-title:hover {
@@ -96,5 +121,13 @@
 
   .entity-children {
     margin-top: 4px;
+  }
+
+  .delete-btn {
+    transform: color 0.35s;
+  }
+
+  .delete-btn:hover {
+    color: #ff4d4f;
   }
 </style>

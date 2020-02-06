@@ -1,3 +1,4 @@
+import get from "lodash/get";
 import { Component, OnInit, OnDestroy, OnChanges, Input, Output, EventEmitter } from "@angular/core";
 import {
   ICompileContext,
@@ -37,6 +38,9 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
   @Output()
   onEntityClick = new EventEmitter();
 
+  @Output()
+  onEntityDelete = new EventEmitter();
+
   public tree: ISourceTree;
 
   constructor(private builder: Builder) {}
@@ -59,11 +63,12 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   public onEntityEditClick(model: any, paths: string | undefined) {
+    const parentPaths = (paths && paths.split("#")) || [];
     const comp = this.tree.components.find(i => i.id === model.ref);
     if (comp) {
       return this.onEntityClick.emit({
         model,
-        paths: (paths && paths.split("#")) || [],
+        paths: parentPaths,
         meta: this.builder.getComponent(comp.module, comp.name),
       });
     }
@@ -71,8 +76,49 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
     if (dire) {
       return this.onEntityClick.emit({
         model,
-        paths: (paths && paths.split("#")) || [],
+        paths: parentPaths,
         meta: this.builder.getDirective(dire.module, dire.name),
+      });
+    }
+  }
+
+  public onEntityDeleteClick(model: any, paths: string | undefined) {
+    const parentPaths = (paths && paths.split("#")) || [];
+    parentPaths.push(model.id);
+    let list: any[] = [this.tree.page!];
+    let found!: any;
+    let path: string = "";
+    let isRoot = true;
+    let lastIndex = -1;
+    for (const ph of parentPaths) {
+      lastIndex = list.findIndex(i => i.id === ph);
+      if (isRoot) {
+        isRoot = false;
+        path += ph === model.id ? "['page']" : "['page']['children']";
+      } else if (ph !== model.id) {
+        path += `[${lastIndex}]['children']`;
+      }
+      found = list[lastIndex];
+      list = found.children || [];
+      if (ph === model.id) {
+        break;
+      }
+    }
+    if (found) {
+      this.onEntityDelete.emit({
+        found,
+        transform: (context: any) => {
+          const target = get(context, path);
+          if (Array.isArray(target)) {
+            target.splice(lastIndex, 1);
+            return { ...context };
+          } else if (path === "['page']") {
+            delete context["page"];
+            return { ...context };
+          } else {
+            return context;
+          }
+        },
       });
     }
   }
@@ -105,7 +151,9 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
       directives,
       components,
     };
-    this.tree.page = context.page && this.getEntityDisplayName(context.page);
+    if (context.page) {
+      this.tree.page = context.page && this.getEntityDisplayName(context.page);
+    }
   }
 
   private getEntityDisplayName(target: IComponentChildDefine): IDisplay<IDisplayEntity> {

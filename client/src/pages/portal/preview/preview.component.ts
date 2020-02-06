@@ -23,8 +23,12 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
   @ViewChild("modalContent", { static: false }) modalContent: TemplateRef<any>;
 
   public showButton = false;
-  public showEditor = true;
-  public showPreview = false;
+  public showEditor: "view" | "config" | "hide" = "view";
+  public showPreview = {
+    edit: true,
+    preview: false,
+  };
+
   public lastDepts: Record<string, string> = {};
   public tempEntityData!: any;
   public modelRef!: NzModalRef;
@@ -76,15 +80,16 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
     this.showButton = true;
   }
 
-  onEditorClick() {
-    this.showEditor = !this.showEditor;
+  onEditorClick(value: any) {
+    if (value === "config") {
+      this.pageConfigs = yamljs.safeDump(this.createContext);
+    }
+    this.showEditor = value;
   }
 
-  onPreviewClick() {
-    this.showPreview = !this.showPreview;
-    if (this.showPreview) {
-      this.runUpdate();
-    }
+  onPreviewClick(target: any) {
+    this.showPreview[target] = !this.showPreview[target];
+    this.trackPreviewIfNeed(this.createContext);
   }
 
   onEntityCreate(e: any) {
@@ -166,9 +171,20 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
     console.log(e);
   }
 
-  private async runUpdate() {
+  deleteEntityFromContext({ found, transform }: any) {
+    this.createContext = transform(this.createContext);
+    console.log(this.createContext);
+    this.trackPreviewIfNeed(this.createContext);
+  }
+
+  onTextareaChange(value: string) {
+    this.createContext = yamljs.safeLoad(value);
+    this.trackPreviewIfNeed(this.createContext);
+  }
+
+  private async runUpdate(confs?: any) {
     try {
-      const configs = yamljs.safeLoad(this.pageConfigs);
+      const configs = confs || yamljs.safeLoad(this.pageConfigs);
       const result = await this.portal.createSource(configs);
       const hasDeptsChange = this.checkIfAllEqual(result.data.dependencies);
       if (this.vm && hasDeptsChange) {
@@ -201,7 +217,7 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
     return Object.entries(newDepts).every(([k, v]) => k in this.lastDepts && this.lastDepts[k] === v);
   }
 
-  onStart() {
+  private onStart() {
     const tpl = this.previewTpl.createEmbeddedView(null);
     this.renderer.appendChild(this.previewRender.nativeElement, tpl.rootNodes[0]);
     SDK.embedProject(tpl.rootNodes[0], this.project, {
@@ -218,9 +234,9 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
     });
   }
 
-  onTextareaChange(value: string) {
-    if (this.showPreview) {
-      this.runUpdate();
+  private trackPreviewIfNeed(confs?: any) {
+    if (this.showPreview.preview) {
+      this.runUpdate(confs);
     }
   }
 }
