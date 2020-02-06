@@ -6,6 +6,7 @@ import { Project } from "@stackblitz/sdk/typings/interfaces";
 import { VM } from "@stackblitz/sdk/typings/VM";
 import { PortalService } from "../services/portal.service";
 import { Builder, ICompileContext } from "../services/builder.service";
+import { EntityEditComponent } from "../components/entity-edit/entity-edit.component";
 
 const CommonDepts = {
   "@types/react": "^16.9.7",
@@ -33,6 +34,7 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
   public pageConfigs = yamljs.safeDump(this.createContext);
 
   public lastModalOk = false;
+  public lastModalType!: "create" | "edit";
 
   public get lastDeptKvs() {
     return Object.entries(this.lastDepts);
@@ -104,10 +106,50 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
       this.modelRef.destroy();
     }
     this.lastModalOk = false;
+    this.lastModalType = "create";
     this.modelRef = this.modal.create({
       nzTitle: "创建节点",
       nzContent: this.modalContent,
       nzWidth: "40vw",
+      nzOnOk: () => {
+        this.tempEntityData = null;
+        this.parentPaths = [];
+        this.lastModalOk = true;
+      },
+      nzOnCancel: () => {
+        this.tempEntityData = null;
+        this.parentPaths = [];
+      },
+    });
+  }
+
+  editEntityOpenModal({ model, meta, paths }: any) {
+    if (this.modelRef) {
+      this.modelRef.destroy();
+    }
+    this.lastModalOk = false;
+    this.lastModalType = "edit";
+    this.modelRef = this.modal.create({
+      nzTitle: "编辑节点",
+      nzContent: EntityEditComponent,
+      nzWidth: "80vw",
+      nzBodyStyle: {
+        height: "64vh",
+        "overflow-y": "auto",
+      },
+      nzComponentParams: {
+        context: this.createContext,
+        model: {
+          id: model.id,
+          module: meta.moduleName,
+          name: meta.name,
+          displayName: meta.displayName === meta.name ? null : meta.displayName,
+          version: meta.metadata.entity.version,
+          metadata: meta.metadata,
+          source: model,
+        },
+        parents: paths,
+      },
       nzOnOk: () => {
         this.tempEntityData = null;
         this.parentPaths = [];
@@ -257,7 +299,9 @@ function createDefaultConfigs(): ICompileContext {
             {
               ref: "StackLayout",
               id: "StackLayoutChild01",
-              input: { background: { type: "literal", expression: "#888888" } },
+              input: {
+                basic: { background: { type: "literal", expression: "#888888" } },
+              },
               children: [
                 {
                   ref: "ZentButton",
@@ -288,7 +332,7 @@ function createDefaultConfigs(): ICompileContext {
           ref: "GridLayout",
           id: "GridLayoutChild02",
           input: {
-            baisc: {
+            basic: {
               background: { type: "literal", expression: "#323233" },
               borderColor: {
                 type: "literal",

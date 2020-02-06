@@ -29,5 +29,6 @@ const routes: Routes = [
   ],
   imports: [CommonsModule, RouterModule.forChild(routes)],
   providers: [PortalService, Builder],
+  entryComponents: [EntityEditComponent],
 })
 export class PortalModule {}

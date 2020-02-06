@@ -32,8 +32,25 @@
         nz-input
         [placeholder]="'请输入' + model.displayInfo.displayName"
         [(ngModel)]="entity.data.inputs[model.displayInfo.fullname].value"
-        (ngModelChange)="onModelChange()"
       />
+    </div>
+    <div *ngSwitchCase="'number'" class="input-layout">
+      <div class="input-label">{{ model.displayInfo.displayName }}</div>
+      <ng-container
+        *ngTemplateOutlet="numberGroup; context: {
+          model: model,
+          data: entity.data.inputs[model.displayInfo.fullname]
+        }"
+      ></ng-container>
+    </div>
+    <div *ngSwitchCase="'enums'" class="input-layout">
+      <div class="input-label">{{ model.displayInfo.displayName }}</div>
+      <ng-container
+        *ngTemplateOutlet="enumsGroup; context: {
+          model: model,
+          data: entity.data.inputs[model.displayInfo.fullname]
+        }"
+      ></ng-container>
     </div>
     <div *ngSwitchCase="'map'" class="map-layout">
       <div class="map-layout-title">
@@ -49,8 +66,27 @@
         </div>
       </div>
     </div>
-    <div *ngSwitchDefault>{{ model | jsonStringify }}</div>
+    <!-- <div *ngSwitchDefault>{{ model | jsonStringify }}</div> -->
+    <div *ngSwitchDefault class="input-layout">
+      <div class="input-label">{{ model.displayInfo.displayName }}</div>
+      <span [title]="model | jsonStringify" style="color: #888">暂不支持的属性</span>
+    </div>
   </ng-container>
+</ng-template>
+
+<ng-template #numberGroup let-model="model" let-data="data">
+  <div class="number-input-group">
+    <nz-input-number [(ngModel)]="data.value" [nzStep]="1" nzPlaceHolder="默认值"></nz-input-number>
+    <button *ngIf="data.value !== null" nz-button nzType="danger" (click)="clearNumberValue(model)">
+      清除
+    </button>
+  </div>
+</ng-template>
+
+<ng-template #enumsGroup let-model="model" let-data="data">
+  <nz-select class="enum-select" *ngIf="data.selectList" [(ngModel)]="data.value">
+    <nz-option *ngFor="let option of data.enumValues" [nzLabel]="option.key" [nzValue]="option.value"></nz-option>
+  </nz-select>
 </ng-template>
 
 <ng-template #mapItemGroup let-model="model" let-data="data">
@@ -60,7 +96,7 @@
       <nz-option *ngFor="let option of model.type.mapInfo.key" [nzLabel]="option" [nzValue]="option"></nz-option>
     </nz-select>
     <input class="x-value" nz-input [(ngModel)]="item[1]" />
-    <button class="x-delete" nz-button nzType="danger" (click)="removeMapEntry(model, idx)">X</button>
+    <button class="x-delete" nz-button nzType="danger" (click)="removeMapEntry(model, idx)">删除</button>
   </div>
 </ng-template>
 
@@ -102,16 +138,13 @@
     font-size: 16px;
     font-weight: 500;
     padding-bottom: 4px;
-    border: 0px solid #ececec;
-    border-bottom-width: 1px;
   }
 
   .options-second-title {
     font-size: 14px;
     font-weight: 300;
-    padding-bottom: 4px;
-    border: 0px solid #ececec;
-    border-bottom-width: 1px;
+    padding: 4px;
+    background: #ececec;
     margin-top: 4px;
   }
 
@@ -167,9 +200,21 @@
   }
 
   .map-select-line .x-delete {
-    width: 32px;
+    width: 60px;
     height: 32px;
     margin-left: 8px;
     padding: 0;
+  }
+
+  .enum-select {
+    width: 240px;
+  }
+
+  .number-input-group {
+    display: block;
+  }
+
+  .number-input-group button {
+    margin-left: 8px;
   }
 </style>

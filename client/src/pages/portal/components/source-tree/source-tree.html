@@ -5,7 +5,7 @@
   <div class="section" *ngFor="let dire of tree.directives">
     <ng-container *ngTemplateOutlet="importDecla; context: { model: dire, type: 'directive' }"></ng-container>
   </div>
-  <ng-container *ngTemplateOutlet="entityDecla; context: { model: tree.page }"></ng-container>
+  <ng-container *ngTemplateOutlet="entityDecla; context: { model: tree.page, paths: undefined }"></ng-container>
 </div>
 
 <ng-template #importDecla let-model="model" let-type="type">
@@ -15,17 +15,22 @@
   </div>
 </ng-template>
 
-<ng-template #entityDecla let-model="model">
+<ng-template #entityDecla let-model="model" let-paths="paths">
   <div class="section">
     <div class="entity-decla">
       <div class="entity-title">
         <ng-container *ngTemplateOutlet="expandButton; context: { model: model }"></ng-container>
         <i nz-icon nzType="layout" nzTheme="outline"></i>
-        <span [title]="model.id">{{ model.displayInfo.displayName }}</span>
+        <span [title]="model.id" (click)="onEntityEditClick(model, paths)">{{ model.displayInfo.displayName }}</span>
       </div>
       <div class="entity-children" *ngIf="checkIfShowChildren(model)">
         <ng-container *ngFor="let childNode of model.children">
-          <ng-container *ngTemplateOutlet="entityDecla; context: { model: childNode }"></ng-container>
+          <ng-container
+            *ngTemplateOutlet="entityDecla; context: {
+              model: childNode,
+              paths: !paths? model.id: (paths + '#' + model.id)
+            }"
+          ></ng-container>
         </ng-container>
       </div>
     </div>

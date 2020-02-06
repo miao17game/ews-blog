@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, OnChanges, Input } from "@angular/core";
+import { Component, OnInit, OnDestroy, OnChanges, Input, Output, EventEmitter } from "@angular/core";
 import {
   ICompileContext,
   IComponentDefine,
@@ -34,6 +34,9 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
   @Input()
   context: ICompileContext;
 
+  @Output()
+  onEntityClick = new EventEmitter();
+
   public tree: ISourceTree;
 
   constructor(private builder: Builder) {}
@@ -55,7 +58,24 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  public onEntityClick() {}
+  public onEntityEditClick(model: any, paths: string | undefined) {
+    const comp = this.tree.components.find(i => i.id === model.ref);
+    if (comp) {
+      return this.onEntityClick.emit({
+        model,
+        paths: (paths && paths.split("#")) || [],
+        meta: this.builder.getComponent(comp.module, comp.name),
+      });
+    }
+    const dire = this.tree.directives.find(i => i.id === model.ref);
+    if (dire) {
+      return this.onEntityClick.emit({
+        model,
+        paths: (paths && paths.split("#")) || [],
+        meta: this.builder.getDirective(dire.module, dire.name),
+      });
+    }
+  }
 
   public onEntityExpand(entity: IDisplay<IPageDefine>) {
     entity.displayInfo.expanded = !entity.displayInfo.expanded;

@@ -28,7 +28,10 @@
         [(ngModel)]="pageConfigs"
         (ngModelChange)="onTextareaChange($event)"
       ></textarea> -->
-      <app-portal-source-tree [context]="createContext"></app-portal-source-tree>
+      <app-portal-source-tree
+        [context]="createContext"
+        (onEntityClick)="editEntityOpenModal($event)"
+      ></app-portal-source-tree>
     </div>
     <div [class.editor-column-hidden]="!showPreview" class="editor-column preview-container">
       <div #previewRender></div>

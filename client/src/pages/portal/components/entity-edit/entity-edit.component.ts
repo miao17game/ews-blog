@@ -1,3 +1,5 @@
+import get from "lodash/get";
+import cloneDeep from "lodash/cloneDeep";
 import { Component, OnDestroy, OnInit, Input, OnChanges, Output, EventEmitter } from "@angular/core";
 import { Builder, ICompileContext } from "../../services/builder.service";
 import { IEntityCreate } from "../module-list/module-list.component";
@@ -23,13 +25,20 @@ interface IGroup {
   };
 }
 
+interface IEntityEdit extends IEntityCreate {
+  source?: any;
+}
+
+const DEFAULT_ENUM_VALUE_LABEL = "默认值";
+const DEFAULT_ENUM_VALUE = "?##default##?";
+
 @Component({
   selector: "app-portal-entity-edit",
   templateUrl: "./entity-edit.html",
 })
 export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
   @Input()
-  model: IEntityCreate;
+  model: IEntityEdit;
 
   @Input()
   context: ICompileContext;
@@ -46,6 +55,9 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
   constructor(private builder: Builder) {}
 
   ngOnInit(): void {
+    console.log(this.model);
+    console.log(this.context);
+    console.log(this.parents);
     this.initContext(this.model);
   }
 
@@ -96,11 +108,14 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
 
   removeMapEntry(model: any, index: number) {
     const value = this.entity.data.inputs[model.displayInfo.fullname].value;
-    // console.log(value);
     (<any[]>value).splice(index, 1);
   }
 
-  private initContext(model: IEntityCreate) {
+  clearNumberValue(model: any) {
+    this.entity.data.inputs[model.displayInfo.fullname].value = null;
+  }
+
+  private initContext(model: IEntityEdit) {
     this.entity = createDefaultEntity();
     this.entity.displayName = model.displayName || model.name;
     this.entity.idVersion = `${model.module}/${model.name}@${model.version}`;
@@ -127,7 +142,8 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
     Object.entries<any>(model.metadata.inputs).forEach(([, d]) => {
       const groupName = d.group || "default";
       const fullname = `${d.group || "default"}.${d.name.value}`;
-      this.initItemNgModel(fullname, d);
+      const propertyPath = !d.group ? d.name.value : `${d.group}.${d.name.value}`;
+      this.initItemNgModel(fullname, propertyPath, model, d);
       groups[groupName].children.push({
         ...d,
         displayInfo: {
@@ -159,22 +175,38 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
     // }
   }
 
-  private initItemNgModel(fullname: string, d: any) {
-    const ngModel: any = (this.entity.data.inputs[fullname] = { value: null });
-    if (d.type.meta === "map") {
-      ngModel.value = [];
+  private initItemNgModel(fullname: string, propertyPath: string, model: IEntityEdit, d: any) {
+    const ngModel: any = (this.entity.data.inputs[fullname] = {
+      value: null,
+      type: d.type.meta,
+    });
+    const forkData: any = cloneDeep(model.source || {});
+    const sourceValue = get(forkData.input, propertyPath, null);
+    if (d.type.meta === "string" || d.type.meta === "number") {
+      ngModel.value = sourceValue === null ? null : sourceValue.expression;
+    } else if (d.type.meta === "map") {
+      ngModel.value = sourceValue === null ? [] : sourceValue.expression;
       const keys = d.type.mapInfo.key;
+      ngModel.selectList = false;
       if (Array.isArray(keys)) {
         ngModel.typeCheck = (v: any) => keys.includes(v);
         ngModel.selectList = true;
       }
       if (typeof keys === "function") {
         ngModel.typeCheck = (v: any) => keys(v);
-        ngModel.selectList = false;
       }
       if (typeof keys === "string") {
         ngModel.typeCheck = (v: any) => typeof v === "string";
-        ngModel.selectList = false;
+      }
+    } else if (d.type.meta === "enums") {
+      ngModel.value = sourceValue === null ? DEFAULT_ENUM_VALUE : sourceValue.expression;
+      const keys = d.type.enumsInfo;
+      ngModel.selectList = false;
+      const otherOptions = keys.map((k: string) => ({ key: k, value: k }));
+      ngModel.enumValues = [{ key: DEFAULT_ENUM_VALUE_LABEL, value: DEFAULT_ENUM_VALUE }, ...otherOptions];
+      if (Array.isArray(keys)) {
+        ngModel.typeCheck = (v: any) => keys.includes(v);
+        ngModel.selectList = true;
       }
     }
   }
@@ -183,14 +215,21 @@ export class EntityEditComponent implements OnInit, OnDestroy, OnChanges {
     for (const key in data.inputs) {
       if (data.inputs.hasOwnProperty(key)) {
         const element = data.inputs[key];
-        if (element.value === null) {
-          delete data.inputs[key];
-        }
-        if (Array.isArray(element.value)) {
-          if (element.value.length === 0) {
+        if (element.type === "string" || element.type === "number") {
+          if (element.value === null) {
             delete data.inputs[key];
           }
-          element.value = element.value.filter((i: any) => i[1] !== null);
+        } else if (element.type === "map") {
+          if (Array.isArray(element.value)) {
+            if (element.value.length === 0) {
+              delete data.inputs[key];
+            }
+            element.value = element.value.filter((i: any) => i[1] !== null);
+          }
+        } else if (element.type === "enums") {
+          if (element.value === DEFAULT_ENUM_VALUE) {
+            delete data.inputs[key];
+          }
         }
       }
     }
