@@ -9,7 +9,12 @@
       <div *ngIf="group.children.length > 0">
         <div class="options-second-title">{{ group.displayInfo.displayName }}</div>
         <div class="options-list" *ngFor="let input of group.children">
-          <ng-container *ngTemplateOutlet="optionItem; context: { model: input }"></ng-container>
+          <ng-container
+            *ngTemplateOutlet="optionItem; context: {
+              model: input,
+              data: entity.data.inputs[input.displayInfo.fullname]
+            }"
+          ></ng-container>
         </div>
       </div>
     </div>
@@ -24,46 +29,26 @@
   </div> -->
 </div>
 
-<ng-template #optionItem let-model="model" let-group="group">
+<ng-template #optionItem let-model="model" let-group="group" let-data="data">
   <ng-container [ngSwitch]="model.type.meta">
     <div *ngSwitchCase="'string'" class="input-layout">
       <div class="input-label">{{ model.displayInfo.displayName }}</div>
-      <ng-container
-        *ngTemplateOutlet="stringColorGroup; context: {
-          model: model,
-          data: entity.data.inputs[model.displayInfo.fullname]
-        }"
-      ></ng-container>
+      <ng-container *ngTemplateOutlet="stringColorGroup; context: { model: model, data: data }"></ng-container>
     </div>
     <div *ngSwitchCase="'number'" class="input-layout">
       <div class="input-label">{{ model.displayInfo.displayName }}</div>
-      <ng-container
-        *ngTemplateOutlet="numberGroup; context: {
-          model: model,
-          data: entity.data.inputs[model.displayInfo.fullname]
-        }"
-      ></ng-container>
+      <ng-container *ngTemplateOutlet="numberGroup; context: { model: model, data: data }"></ng-container>
     </div>
     <div *ngSwitchCase="'enums'" class="input-layout">
       <div class="input-label">{{ model.displayInfo.displayName }}</div>
-      <ng-container
-        *ngTemplateOutlet="enumsGroup; context: {
-          model: model,
-          data: entity.data.inputs[model.displayInfo.fullname]
-        }"
-      ></ng-container>
+      <ng-container *ngTemplateOutlet="enumsGroup; context: { model: model, data: data }"></ng-container>
     </div>
     <div *ngSwitchCase="'map'" class="map-layout">
       <div class="map-layout-title">
         <div class="map-label">{{ model.displayInfo.displayName }}</div>
         <div class="map-add-btn">
           <button nz-button nzType="primary" (click)="addMapEntry(model)">+</button>
-          <ng-container
-            *ngTemplateOutlet="mapItemGroup; context: {
-              model: model,
-              data: entity.data.inputs[model.displayInfo.fullname]
-            }"
-          ></ng-container>
+          <ng-container *ngTemplateOutlet="mapItemGroup; context: { model: model, data: data }"></ng-container>
         </div>
       </div>
     </div>
