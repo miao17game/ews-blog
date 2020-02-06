@@ -8,20 +8,22 @@ import {
   IComponentChildDefine,
 } from "../../services/builder.service";
 
-type IExtend<T> = T & {
-  displayInfo: { displayName: string };
+type IDisplay<T> = T & {
+  displayInfo: {
+    displayName: string;
+    expanded: boolean;
+  };
 };
 
 interface ISourceTree {
-  components: IExtend<IComponentDefine>[];
-  directives: IExtend<IDirectiveDefine>[];
-  page?: IDisplayEntity;
+  components: IDisplay<IComponentDefine>[];
+  directives: IDisplay<IDirectiveDefine>[];
+  page?: IDisplay<IDisplayEntity>;
 }
 
 interface IDisplayEntity extends IPageDefine {
-  displayInfo: { displayName: string };
-  children?: IExtend<IPageDefine>[];
-  directives?: IExtend<IPageDefine>[];
+  children?: IDisplay<IPageDefine>[];
+  directives?: IDisplay<IPageDefine>[];
 }
 
 @Component({
@@ -35,39 +37,6 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
   public tree: ISourceTree;
 
   constructor(private builder: Builder) {}
-
-  private initTree(context: ICompileContext) {
-    const components = (context.components || []).map(i => ({
-      ...i,
-      displayInfo: { displayName: getDisplayText(this.builder.getComponent(i.module, i.name).displayName, i.name) },
-    }));
-    const directives = (context.directives || []).map(i => ({
-      ...i,
-      displayInfo: { displayName: getDisplayText(this.builder.getDirective(i.module, i.name).displayName, i.name) },
-    }));
-    this.tree = {
-      page: null,
-      directives,
-      components,
-    };
-    this.tree.page = context.page && this.getEntityDisplayName(context.page);
-  }
-
-  private getEntityDisplayName(target: IComponentChildDefine): IDisplayEntity {
-    const { ref } = target;
-    const { children, directives, ...others } = target;
-    const comp = this.tree.components.find(i => i.id === ref);
-    if (comp) {
-      return {
-        ...others,
-        children: (children || []).map(i => this.getEntityDisplayName(i)).filter(i => !!i),
-        directives: (directives || []).map(i => this.getEntityDisplayName(i)).filter(i => !!i),
-        displayInfo: {
-          displayName: comp.displayInfo.displayName,
-        },
-      };
-    }
-  }
 
   ngOnInit(): void {
     this.initTree(this.context);
@@ -85,8 +54,58 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
       }
     }
   }
+
+  public onEntityClick() {}
+
+  public onEntityExpand(entity: IDisplay<IPageDefine>) {
+    entity.displayInfo.expanded = !entity.displayInfo.expanded;
+  }
+
+  public checkIfShowChildren(entity: IDisplay<IPageDefine>) {
+    return entity.children && entity.children.length > 0 && entity.displayInfo.expanded;
+  }
+
+  private initTree(context: ICompileContext) {
+    const components = (context.components || []).map(i => ({
+      ...i,
+      displayInfo: {
+        displayName: getDisplayText(this.builder.getComponent(i.module, i.name).displayName, i.name),
+        expanded: false,
+      },
+    }));
+    const directives = (context.directives || []).map(i => ({
+      ...i,
+      displayInfo: {
+        displayName: getDisplayText(this.builder.getDirective(i.module, i.name).displayName, i.name),
+        expanded: false,
+      },
+    }));
+    this.tree = {
+      page: null,
+      directives,
+      components,
+    };
+    this.tree.page = context.page && this.getEntityDisplayName(context.page);
+  }
+
+  private getEntityDisplayName(target: IComponentChildDefine): IDisplay<IDisplayEntity> {
+    const { ref } = target;
+    const { children, directives, ...others } = target;
+    const comp = this.tree.components.find(i => i.id === ref);
+    if (comp) {
+      return {
+        ...others,
+        children: (children || []).map(i => this.getEntityDisplayName(i)).filter(i => !!i),
+        directives: (directives || []).map(i => this.getEntityDisplayName(i)).filter(i => !!i),
+        displayInfo: {
+          displayName: comp.displayInfo.displayName,
+          expanded: true,
+        },
+      };
+    }
+  }
 }
 
 function getDisplayText(displayName: string, name: string): any {
-  return displayName === name ? displayName : `${displayName}(${name})`;
+  return displayName === name ? displayName : `${displayName} (${name})`;
 }

@@ -6,16 +6,27 @@
 
 <!-- module 布局 -->
 <ng-template #moduleGroup let-model="model">
-  <div class="module-title">
+  <div class="module-title" (click)="onModuleExpand(model)">
+    <i nz-icon [nzType]="model.displayInfo.expanded? 'down': 'right'" nzTheme="outline"></i>
     <i nz-icon nzType="code-sandbox" nzTheme="outline"></i>
-    <span>{{ model.displayName }}</span>
+    <span [title]="model.displayInfo.displayName">{{ model.displayName }}</span>
   </div>
-  <ng-container
-    *ngTemplateOutlet="moduleSubGroup; context: { model: model, type: 'component', target: 'components' }"
-  ></ng-container>
-  <ng-container
-    *ngTemplateOutlet="moduleSubGroup; context: { model: model, type: 'directive', target: 'directives' }"
-  ></ng-container>
+  <div *ngIf="model.displayInfo.expanded">
+    <ng-container
+      *ngTemplateOutlet="moduleSubGroup; context: {
+        model: model,
+        type: 'component',
+        target: 'components'
+      }"
+    ></ng-container>
+    <ng-container
+      *ngTemplateOutlet="moduleSubGroup; context: {
+        model: model,
+        type: 'directive',
+        target: 'directives'
+      }"
+    ></ng-container>
+  </div>
 </ng-template>
 
 <!-- module 二级布局 -->
@@ -31,9 +42,7 @@
 <ng-template #entityGroup let-model="model" let-type="type">
   <div class="entity-group">
     <i nz-icon [nzType]=" type === 'component' ? 'appstore': 'api' " nzTheme="outline"></i>
-    <div (click)="onEntityClick(model)">
-      {{ model.displayName !== model.name ? model.displayName + '(' + model.name + ')': model.displayName }}
-    </div>
+    <div (click)="onEntityClick(model)">{{ model.displayInfo.displayName }}</div>
   </div>
 </ng-template>
 
@@ -44,8 +53,13 @@
 
   .module-group {
     padding: 4px;
+    padding-bottom: 0px;
     border: 1px solid #f2f2f2;
     background: #f6f6f6;
+  }
+
+  .module-group:last-child {
+    padding-bottom: 4px;
   }
 
   .module-title {
@@ -53,7 +67,7 @@
     color: #fff;
     font-weight: 400;
     padding: 4px;
-    margin-bottom: 4px;
+    cursor: pointer;
   }
 
   .module-title i {

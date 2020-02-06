@@ -7,16 +7,9 @@
     <div class="options-first-title">模板属性</div>
     <div *ngFor="let group of entity.inputs">
       <div *ngIf="group.children.length > 0">
-        <div class="options-second-title">{{ group.displayName }}</div>
+        <div class="options-second-title">{{ group.displayInfo.displayName }}</div>
         <div class="options-list" *ngFor="let input of group.children">
-          <ng-container
-            *ngTemplateOutlet="optionItem; context: {
-              model: input,
-              fullname: group.name !== 'default' ? group.name + '.' + input.name.value: input.name.value,
-              display: input.name.displayValue,
-              name: input.name.value
-            }"
-          ></ng-container>
+          <ng-container *ngTemplateOutlet="optionItem; context: { model: input }"></ng-container>
         </div>
       </div>
     </div>
@@ -31,17 +24,43 @@
   </div> -->
 </div>
 
-<ng-template #optionItem let-model="model" let-group="group" let-display="display" let-fullname="fullname">
-  <div *ngIf="display !== name && !!display">{{ display }}({{ name }})</div>
-  <div *ngIf="display === name || !display">{{ name }}</div>
-  <div>{{ model | jsonStringify }}</div>
-  <div *ngIf="model.type.meta === 'string'">
-    <input
-      nz-input
-      [placeholder]="'请输入' + display || name"
-      [(ngModel)]="entity.data.inputs[fullname].value"
-      (ngModelChange)="onModelChange()"
-    />
+<ng-template #optionItem let-model="model" let-group="group">
+  <ng-container [ngSwitch]="model.type.meta">
+    <div *ngSwitchCase="'string'" class="input-layout">
+      <div class="input-label">{{ model.displayInfo.displayName }}</div>
+      <input
+        nz-input
+        [placeholder]="'请输入' + model.displayInfo.displayName"
+        [(ngModel)]="entity.data.inputs[model.displayInfo.fullname].value"
+        (ngModelChange)="onModelChange()"
+      />
+    </div>
+    <div *ngSwitchCase="'map'" class="map-layout">
+      <div class="map-layout-title">
+        <div class="map-label">{{ model.displayInfo.displayName }}</div>
+        <div class="map-add-btn">
+          <button nz-button nzType="primary" (click)="addMapEntry(model)">+</button>
+          <ng-container
+            *ngTemplateOutlet="mapItemGroup; context: {
+              model: model,
+              data: entity.data.inputs[model.displayInfo.fullname]
+            }"
+          ></ng-container>
+        </div>
+      </div>
+    </div>
+    <div *ngSwitchDefault>{{ model | jsonStringify }}</div>
+  </ng-container>
+</ng-template>
+
+<ng-template #mapItemGroup let-model="model" let-data="data">
+  <div class="map-select-line" *ngFor="let item of data.value; let idx = index">
+    <input class="x-label" *ngIf="!data.selectList" nz-input [(ngModel)]="item[0]" />
+    <nz-select class="x-label" *ngIf="data.selectList" [(ngModel)]="item[0]">
+      <nz-option *ngFor="let option of model.type.mapInfo.key" [nzLabel]="option" [nzValue]="option"></nz-option>
+    </nz-select>
+    <input class="x-value" nz-input [(ngModel)]="item[1]" />
+    <button class="x-delete" nz-button nzType="danger" (click)="removeMapEntry(model, idx)">X</button>
   </div>
 </ng-template>
 
@@ -98,5 +117,59 @@
 
   .options-list {
     padding-left: 4px;
+  }
+
+  .input-layout {
+    display: flex;
+    padding: 8px 0;
+  }
+
+  .input-layout .input-label {
+    width: 200px;
+    line-height: 32px;
+  }
+
+  .input-layout input {
+    flex: 1;
+  }
+
+  .map-layout {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+  }
+
+  .map-layout-title {
+    display: flex;
+  }
+
+  .map-layout-title .map-label {
+    width: 200px;
+    line-height: 32px;
+  }
+
+  .map-layout-title .map-add-btn {
+    flex: 1;
+  }
+
+  .map-select-line {
+    margin: 4px 0 0 0;
+    display: flex;
+  }
+
+  .map-select-line .x-label {
+    flex: 1;
+    margin-right: 8px;
+  }
+
+  .map-select-line .x-value {
+    flex: 2;
+  }
+
+  .map-select-line .x-delete {
+    width: 32px;
+    height: 32px;
+    margin-left: 8px;
+    padding: 0;
   }
 </style>

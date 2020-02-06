@@ -67,8 +67,7 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit() {
-    // console.log(SDK);
-    console.log(this.builder.moduleList);
+    // console.log(this.builder.moduleList);
   }
 
   ngAfterViewInit() {
@@ -113,18 +112,16 @@ export class PortalPreviewComponent implements OnInit, AfterViewInit {
         this.tempEntityData = null;
         this.parentPaths = [];
         this.lastModalOk = true;
-        console.log("ok");
       },
       nzOnCancel: () => {
         this.tempEntityData = null;
         this.parentPaths = [];
-        console.log("cancel");
       },
     });
   }
 
   onEmit(e: any) {
-    console.log([this.lastModalOk, e]);
+    console.log(e);
   }
 
   private async runUpdate() {
@@ -204,24 +201,28 @@ function createDefaultConfigs(): ICompileContext {
       id: "GridLayoutPageRoot",
       slot: "app",
       input: {
-        width: { type: "literal", expression: "100vw" },
-        height: { type: "literal", expression: "100vh" },
-        rowCount: { type: "literal", expression: 2 },
-        columnCount: { type: "literal", expression: 3 },
-        rowSizes: {
-          type: "literal",
-          expression: [
-            [1, 50],
-            [2, 50],
-          ],
+        basic: {
+          width: { type: "literal", expression: "100vw" },
+          height: { type: "literal", expression: "100vh" },
         },
-        columnSizes: {
-          type: "literal",
-          expression: [
-            [1, 30],
-            [2, 40],
-            [3, 30],
-          ],
+        grid: {
+          rowCount: { type: "literal", expression: 2 },
+          columnCount: { type: "literal", expression: 3 },
+          rowSizes: {
+            type: "literal",
+            expression: [
+              [1, 50],
+              [2, 50],
+            ],
+          },
+          columnSizes: {
+            type: "literal",
+            expression: [
+              [1, 30],
+              [2, 40],
+              [3, 30],
+            ],
+          },
         },
       },
       directives: [
@@ -247,8 +248,10 @@ function createDefaultConfigs(): ICompileContext {
           ref: "GridLayout",
           id: "GridLayoutChild01",
           input: {
-            background: { type: "literal", expression: "#fea500" },
-            padding: { type: "literal", expression: [["all", "10px"]] },
+            basic: {
+              background: { type: "literal", expression: "#fea500" },
+              padding: { type: "literal", expression: [["all", "10px"]] },
+            },
           },
           children: [
             {
@@ -285,33 +288,39 @@ function createDefaultConfigs(): ICompileContext {
           ref: "GridLayout",
           id: "GridLayoutChild02",
           input: {
-            background: { type: "literal", expression: "#323233" },
-            borderColor: {
-              type: "literal",
-              expression: [
-                ["all", "#ffffff"],
-                ["bottom", "#fea588"],
-              ],
-            },
-            borderWidth: { type: "literal", expression: [["all", "4px"]] },
-            borderStyle: {
-              type: "literal",
-              expression: [
-                ["all", "hidden"],
-                ["bottom", "solid"],
-              ],
+            baisc: {
+              background: { type: "literal", expression: "#323233" },
+              borderColor: {
+                type: "literal",
+                expression: [
+                  ["all", "#ffffff"],
+                  ["bottom", "#fea588"],
+                ],
+              },
+              borderWidth: { type: "literal", expression: [["all", "4px"]] },
+              borderStyle: {
+                type: "literal",
+                expression: [
+                  ["all", "hidden"],
+                  ["bottom", "solid"],
+                ],
+              },
             },
           },
         },
         {
           ref: "GridLayout",
           id: "GridLayoutChild03",
-          input: { background: { type: "literal", expression: "rgb(254, 38, 76)" } },
+          input: {
+            basic: { background: { type: "literal", expression: "rgb(254, 38, 76)" } },
+          },
         },
         {
           ref: "GridLayout",
           id: "GridLayoutChild04",
-          input: { background: { type: "literal", expression: "rgb(54, 158, 106)" } },
+          input: {
+            basic: { background: { type: "literal", expression: "rgb(54, 158, 106)" } },
+          },
           children: [
             {
               ref: "ZentButton",

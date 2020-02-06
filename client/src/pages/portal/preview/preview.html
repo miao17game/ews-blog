@@ -20,7 +20,7 @@
     </div>
   </div>
   <div class="editor-group">
-    <div [class.editor-column-hidden]="!showEditor" class="editor-column">
+    <div [class.editor-column-hidden]="!showEditor" class="editor-column preview-trees">
       <!-- <textarea
         style="height: 80vh"
         rows="36"
@@ -127,8 +127,21 @@
     transform: scaleX(0);
   }
 
+  .preview-trees {
+    height: 80vh;
+    overflow: hidden;
+    /* overflow-y: auto; */
+  }
+
+  .preview-trees app-portal-source-tree {
+    height: 100%;
+    position: relative;
+    overflow-y: auto;
+  }
+
   .preview-container {
     height: 80vh;
+    overflow: hidden;
     background: #f0f0f0;
   }
 

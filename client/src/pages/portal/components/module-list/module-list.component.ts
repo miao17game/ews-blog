@@ -19,13 +19,13 @@ export class ModuleListComponent implements OnInit, OnDestroy {
   @Output()
   onEntityCreate = new EventEmitter<IEntityCreate>();
 
-  get moduleList() {
-    return this.builder.moduleList;
-  }
+  public moduleList: any[] = [];
 
   constructor(private builder: Builder) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.initModuleList();
+  }
 
   ngOnDestroy(): void {}
 
@@ -40,4 +40,32 @@ export class ModuleListComponent implements OnInit, OnDestroy {
       metadata: target.metadata,
     });
   }
+
+  public onModuleExpand(model: any) {
+    model.displayInfo.expanded = !model.displayInfo.expanded;
+  }
+
+  private initModuleList() {
+    this.moduleList = this.builder.moduleList.map(i => {
+      return {
+        ...i,
+        components: (i.components || []).map((e: any) => ({
+          ...e,
+          displayInfo: { displayName: createDisplayName(e) },
+        })),
+        directives: (i.directives || []).map((e: any) => ({
+          ...e,
+          displayInfo: { displayName: createDisplayName(e) },
+        })),
+        displayInfo: {
+          displayName: createDisplayName(i),
+          expanded: true,
+        },
+      };
+    });
+  }
+}
+
+function createDisplayName(i: any) {
+  return i.displayName !== i.name ? i.displayName + " (" + i.name + ")" : i.displayName;
 }

@@ -1,4 +1,4 @@
-<div *ngIf="tree" class="root">
+<div *ngIf="tree">
   <div class="section" *ngFor="let comp of tree.components">
     <ng-container *ngTemplateOutlet="importDecla; context: { model: comp, type: 'component' }"></ng-container>
   </div>
@@ -19,11 +19,11 @@
   <div class="section">
     <div class="entity-decla">
       <div class="entity-title">
+        <ng-container *ngTemplateOutlet="expandButton; context: { model: model }"></ng-container>
         <i nz-icon nzType="layout" nzTheme="outline"></i>
         <span [title]="model.id">{{ model.displayInfo.displayName }}</span>
       </div>
-      <div class="entity-children" *ngIf="model.children && model.children.length > 0">
-        <!-- <div class="section">Children</div> -->
+      <div class="entity-children" *ngIf="checkIfShowChildren(model)">
         <ng-container *ngFor="let childNode of model.children">
           <ng-container *ngTemplateOutlet="entityDecla; context: { model: childNode }"></ng-container>
         </ng-container>
@@ -32,8 +32,18 @@
   </div>
 </ng-template>
 
+<ng-template #expandButton let-model="model">
+  <i
+    *ngIf="model.children && model.children.length > 0"
+    nz-icon
+    [nzType]="!model.displayInfo.expanded? 'right': 'down'"
+    nzTheme="outline"
+    (click)="onEntityExpand(model)"
+  ></i>
+</ng-template>
+
 <style>
-  .root {
+  :host {
     display: block;
     border: 1px solid #ececec;
     background: #fafafa;
