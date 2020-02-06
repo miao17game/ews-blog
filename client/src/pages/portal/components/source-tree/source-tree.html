@@ -7,7 +7,7 @@
   <div *ngIf="!tree.page" class="empty-state">
     <nz-result nzIcon="meh-twotone" nzTitle="当前页面空无一物">
       <div nz-result-extra>
-        <button nz-button nzType="primary" (click)="entityCreateClick(null)">点击创建页面根</button>
+        <button nz-button nzType="primary" (click)="entityCreateClick(null, 'component')">点击创建页面根</button>
       </div>
     </nz-result>
   </div>
@@ -60,7 +60,7 @@
         <div>
           <ng-container
             *ngTemplateOutlet="expandButton; context: {
-              model: model,
+              model: null,
               enabled: enabled,
               type: type,
               expanded: type === 'component'? tree.compExpanded: tree.direExpanded

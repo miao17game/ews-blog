@@ -18,11 +18,16 @@ ADD server/package.json /app/server/package.json
 ADD server/yarn.lock /app/server/yarn.lock
 RUN cd /app/server && yarn install
 
-ADD client /app/client
-RUN cd /app/client && yarn build
-
 ADD server /app/server
 RUN cd /app/server && yarn build
+
+ADD webpack.config.js /app/webpack.config.js
+ADD tsconfig.websdk.json /app/tsconfig.websdk.json
+ADD scripts/build-sdk.js /app/scripts/build-sdk.js
+RUN cd /app && yarn build:websdk
+
+ADD client /app/client
+RUN cd /app/client && yarn build
 
 WORKDIR /app
 
