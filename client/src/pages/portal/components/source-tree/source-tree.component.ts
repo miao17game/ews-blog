@@ -39,6 +39,9 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
   onEntityClick = new EventEmitter();
 
   @Output()
+  onEntityCreate = new EventEmitter();
+
+  @Output()
   onEntityDelete = new EventEmitter();
 
   public tree: ISourceTree;
@@ -81,6 +84,8 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
       });
     }
   }
+
+  public onEntityCreateClick(model: any, paths: string | undefined) {}
 
   public onEntityDeleteClick(model: any, paths: string | undefined) {
     const parentPaths = (paths && paths.split("#")) || [];

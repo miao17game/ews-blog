@@ -25,6 +25,7 @@
           <span [title]="model.id">{{ model.displayInfo.displayName }}</span>
         </div>
         <div class="entity-actions">
+          <i nz-icon nzType="plus-square" nzTheme="outline" (click)="onEntityCreateClick(model, paths)"></i>
           <i nz-icon nzType="form" nzTheme="outline" (click)="onEntityEditClick(model, paths)"></i>
           <i
             nz-icon
@@ -115,8 +116,16 @@
     padding-right: 4px;
   }
 
+  .entity-title .entity-actions {
+    visibility: hidden;
+  }
+
   .entity-title:hover {
     background: #f6f6f6;
+  }
+
+  .entity-title:hover .entity-actions {
+    visibility: visible;
   }
 
   .entity-title i {
