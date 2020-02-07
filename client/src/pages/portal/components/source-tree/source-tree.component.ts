@@ -21,6 +21,7 @@ import {
 } from "../../services/builder.service";
 import { IEntityEdit, IEntityEditResult } from "../entity-edit/entity-edit.component";
 import { IEntityCreate } from "../module-list/module-list.component";
+import { Subscription } from "rxjs";
 
 type IDisplay<T> = T & {
   displayInfo: {
@@ -70,15 +71,32 @@ export class SourceTreeComponent implements OnInit, OnDestroy, OnChanges {
   private modelRef!: NzModalRef;
   private lastModalOk = false;
 
+  private subp!: Subscription;
+
+  public get onLoad() {
+    return this.builder.onLoad;
+  }
+
+  public get onLoadError() {
+    return this.builder.onLoadError;
+  }
+
   constructor(private builder: Builder, private modal: NzModalService) {}
 
   ngOnInit(): void {
-    this.initTree(this.context || createDefaultConfigs());
+    this.subp = this.builder.onLoad.subscribe(loaded => {
+      if (loaded === true) {
+        this.initTree(this.context || createDefaultConfigs());
+      }
+    });
   }
 
   ngOnDestroy(): void {
     if (this.modelRef) {
       this.modelRef.destroy();
+    }
+    if (this.subp && !this.subp.closed) {
+      this.subp.unsubscribe();
     }
   }
 

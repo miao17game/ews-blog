@@ -33,7 +33,13 @@
               }
             ],
             "styles": ["src/styles.scss", "./node_modules/ng-zorro-antd/ng-zorro-antd.min.css"],
-            "scripts": ["../websdk/index.js"]
+            "scripts": [
+              {
+                "input": "../websdk/index.js",
+                "lazy": true,
+                "bundleName": "ews-server-websdk"
+              }
+            ]
           },
           "configurations": {
             "production": {
@@ -56,7 +62,7 @@
                 {
                   "type": "initial",
                   "maximumWarning": "2mb",
-                  "maximumError": "6mb"
+                  "maximumError": "5mb"
                 },
                 {
                   "type": "anyComponentStyle",

@@ -1,50 +1,18 @@
-<div *ngIf="tree">
-  <ng-container *ngTemplateOutlet="importGroup; context: { enabled: true, type: 'component' }"></ng-container>
-  <ng-container *ngTemplateOutlet="importGroup; context: { enabled: true, type: 'directive' }"></ng-container>
-  <ng-container
-    *ngTemplateOutlet="entityDecla; context: { model: tree.page, type: 'component', paths: undefined }"
-  ></ng-container>
-  <div *ngIf="!tree.page" class="empty-state">
-    <nz-result nzIcon="meh-twotone" nzTitle="当前页面空无一物">
-      <div nz-result-extra>
-        <button nz-button nzType="primary" (click)="entityCreateClick(null, 'component')">点击创建页面根</button>
-      </div>
-    </nz-result>
-  </div>
-</div>
-
-<ng-template #createModalContent>
-  <div *ngIf="tempEntityData" class="edit-goback" (click)="editGoBack()">
-    <i nz-icon nzType="left" nzTheme="outline"></i>
-    <span>后退</span>
-  </div>
-  <div class="model-slide-group">
-    <div class="model-slide-selectlist" *ngIf="!tempEntityData">
-      <app-portal-module-list (onEntityCreate)="saveEntityTemp($event)"></app-portal-module-list>
-    </div>
-    <div class="model-slide-edit" *ngIf="tempEntityData">
-      <app-portal-entity-edit
-        [target]="tempEntityData"
-        [context]="context"
-        [parents]="tempParentPath || []"
-        (onComplete)="receiveEmitEntity($event)"
-      ></app-portal-entity-edit>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #editModalContent>
-  <div *ngIf="tempEntityData" class="model-slide-group">
-    <div class="model-slide-edit">
-      <app-portal-entity-edit
-        [target]="tempEntityData"
-        [context]="context"
-        [parents]="tempParentPath || []"
-        (onComplete)="receiveEmitEntity($event)"
-      ></app-portal-entity-edit>
-    </div>
-  </div>
-</ng-template>
+<ng-container [ngSwitch]="onLoad | async">
+  <ng-container *ngSwitchCase="true">
+    <ng-container *ngIf="tree">
+      <ng-container *ngTemplateOutlet="importGroup; context: { enabled: true, type: 'component' }"></ng-container>
+      <ng-container *ngTemplateOutlet="importGroup; context: { enabled: true, type: 'directive' }"></ng-container>
+      <ng-container *ngTemplateOutlet="entityNode; context: { model: tree.page, type: 'component' }"></ng-container>
+      <ng-container *ngTemplateOutlet="emptySourceTree"></ng-container>
+    </ng-container>
+  </ng-container>
+  <ng-container *ngSwitchCase="false">
+    <ng-container *ngIf="onLoadError | async as scriptError; else loadingWebsdk">
+      <ng-container *ngTemplateOutlet="loadWebsdkError; context: { error: scriptError }"></ng-container>
+    </ng-container>
+  </ng-container>
+</ng-container>
 
 <ng-template #deleteModalContext>
   <div *ngIf="willDelete">
@@ -72,21 +40,21 @@
       </div>
       <ng-container *ngIf="type === 'component'? tree.compExpanded: tree.direExpanded">
         <div class="section" *ngFor="let comp of tree[type + 's']">
-          <ng-container *ngTemplateOutlet="importDecla; context: { model: comp, type: type }"></ng-container>
+          <ng-container *ngTemplateOutlet="importNode; context: { model: comp, type: type }"></ng-container>
         </div>
       </ng-container>
     </div>
   </div>
 </ng-template>
 
-<ng-template #importDecla let-model="model" let-type="type">
+<ng-template #importNode let-model="model" let-type="type">
   <div class="import-decla">
     <i nz-icon [nzType]=" type === 'component' ? 'appstore': 'api' " nzTheme="outline"></i>
     <span [title]="model.id">{{ model.displayInfo.displayName }}</span>
   </div>
 </ng-template>
 
-<ng-template #entityDecla let-model="model" let-paths="paths" let-type="type">
+<ng-template #entityNode let-model="model" let-paths="paths" let-type="type">
   <div *ngIf="model" class="section" [class.not-root]="!!paths">
     <div class="common-decla">
       <div class="common-title">
@@ -98,7 +66,7 @@
       <div class="entity-children" *ngIf="checkIfShowChildren(model)">
         <ng-container *ngFor="let childNode of model.children">
           <ng-container
-            *ngTemplateOutlet="entityDecla; context: {
+            *ngTemplateOutlet="entityNode; context: {
               model: childNode,
               paths: !paths? model.id: (paths + '#' + model.id),
               type: 'component'
@@ -142,6 +110,66 @@
     (click)="type === 'entity'? entityExpand(model): groupExpand(type)"
   ></i>
   <i *ngIf="!enabled" style="color: #888888" nz-icon nzType="stop" nzTheme="outline"></i>
+</ng-template>
+
+<ng-template #createModalContent>
+  <div *ngIf="tempEntityData" class="edit-goback" (click)="editGoBack()">
+    <i nz-icon nzType="left" nzTheme="outline"></i>
+    <span>后退</span>
+  </div>
+  <div class="model-slide-group">
+    <div class="model-slide-selectlist" *ngIf="!tempEntityData">
+      <app-portal-module-list (onEntityCreate)="saveEntityTemp($event)"></app-portal-module-list>
+    </div>
+    <ng-container *ngTemplateOutlet="entityEditContent"></ng-container>
+  </div>
+</ng-template>
+
+<ng-template #editModalContent>
+  <div class="model-slide-group">
+    <ng-container *ngTemplateOutlet="entityEditContent"></ng-container>
+  </div>
+</ng-template>
+
+<ng-template #entityEditContent>
+  <div class="model-slide-edit" *ngIf="tempEntityData">
+    <app-portal-entity-edit
+      [target]="tempEntityData"
+      [context]="context"
+      [parents]="tempParentPath || []"
+      (onComplete)="receiveEmitEntity($event)"
+    ></app-portal-entity-edit>
+  </div>
+</ng-template>
+
+<ng-template #loadingWebsdk>
+  <div class="empty-state">
+    <nz-result nzIcon="meh-twotone" nzTitle="正在获取核心功能脚本，请稍候">
+      <div nz-result-extra>
+        <button nz-button disabled nzType="primary">点我也没用</button>
+      </div>
+    </nz-result>
+  </div>
+</ng-template>
+
+<ng-template #loadWebsdkError let-error="error">
+  <div class="empty-state">
+    <nz-result nzIcon="meh-twotone" [nzTitle]="'获取核心功能脚本失败：' + error.message">
+      <div nz-result-extra>
+        <button nz-button disabled nzType="primary">点我也没用</button>
+      </div>
+    </nz-result>
+  </div>
+</ng-template>
+
+<ng-template #emptySourceTree>
+  <div *ngIf="!tree.page" class="empty-state">
+    <nz-result nzIcon="meh-twotone" nzTitle="当前页面空无一物">
+      <div nz-result-extra>
+        <button nz-button nzType="primary" (click)="entityCreateClick(null, 'component')">点击创建页面根</button>
+      </div>
+    </nz-result>
+  </div>
 </ng-template>
 
 <style>

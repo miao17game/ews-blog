@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { Subject, BehaviorSubject } from "rxjs";
 
 declare global {
   interface BuilderSdk {
@@ -131,15 +132,56 @@ export interface IImportDeclaration {
 
 @Injectable()
 export class Builder {
-  private factory = new window.EwsBuilderFactory().parse();
+  private _init = false;
+  private _initing = false;
+  private _loaded = false;
 
-  public SDK = window.AmoebajsBuilderSdk;
-  public Utils = window.AmoebajsBuilderUtils;
-
-  public builder = this.factory.builder;
+  private factory!: any;
+  public SDK!: BuilderSdk;
+  public Utils!: BuilderSdkUtils;
+  public builder!: any;
   public moduleList: ICompileModule[] = [];
 
+  private readonly _onLoad = new BehaviorSubject<boolean | Error>(this._loaded);
+  public readonly onLoad = this._onLoad.asObservable();
+
+  private readonly _onLoadError = new Subject<Error>();
+  public readonly onLoadError = this._onLoadError.asObservable();
+
   constructor() {
+    this.loadServerWebsdk()
+      .then(() => console.log("loaded"))
+      .catch(error => console.log(error));
+  }
+
+  public async loadServerWebsdk() {
+    this._initing = true;
+    return new Promise((resolve, reject) => {
+      const element = document.createElement("script");
+      element.type = "text/javascript";
+      element.src = "ews-server-websdk.js";
+      element.onload = () => {
+        this._initing = false;
+        this.initBuilder();
+        this._onLoad.next(true);
+        resolve();
+      };
+      element.onerror = error => {
+        this._initing = false;
+        this._onLoadError.next(new Error("load websdk failed"));
+        reject(error);
+      };
+      setTimeout(() => {
+        document.body.appendChild(element);
+      }, 500);
+    });
+  }
+
+  private initBuilder() {
+    this.factory = new window.EwsBuilderFactory().parse();
+    this.Utils = window.AmoebajsBuilderUtils;
+    this.SDK = window.AmoebajsBuilderSdk;
+    this.builder = this.factory.builder;
     const modules = this.builder.globalMap.maps.modules;
     Object.entries<ISourceModule>(modules).forEach(([name, md]) => {
       const components = Object.entries(md.components).map(([, cp]) => cp);
