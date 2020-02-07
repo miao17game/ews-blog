@@ -33,11 +33,11 @@ if (!quick) {
 }
 
 const command = "docker";
-const params = ["build", "-t", `bigmogician/ews-core:${version}`, "."];
+const params = ["build", "-t", `bigmogician/ews-blog:${version}`, "."];
 
 console.log("$ " + command + " " + params.join(" "));
 
-spawn("docker", ["build", "-t", `bigmogician/ews-core:${version}`, "."], {
+spawn("docker", ["build", "-t", `bigmogician/ews-blog:${version}`, "."], {
   env: process.env,
   cwd: path.resolve(__dirname, ".."),
   stdio: ["pipe", process.stdout, process.stderr],
