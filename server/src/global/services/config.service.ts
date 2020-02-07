@@ -1,14 +1,26 @@
 import { Injectable } from "@nestjs/common";
 import { cloneDeep } from "lodash";
-import { IConfigs } from "../../configs/config";
+import { CompressionOptions } from "compression";
+
+export interface IServerConfigs {
+  name: string;
+  uriGroup: {
+    portal: { uri: string; token: string; type: string };
+    site: { uri: string; token: string; type: string };
+    api: { uri: string; token: string; type: string };
+  };
+  redis: { enabled: boolean; host: string; port: number };
+  cluster: { enabled: boolean; maxCpuNum: number | null };
+  gzip: { enabled: boolean; options?: Partial<CompressionOptions> };
+}
 
 @Injectable()
 export class ConfigService {
-  private _config!: IConfigs;
+  private _config!: IServerConfigs;
   private _env: { [prop: string]: string } = {};
 
-  public setConfig(config: IConfigs) {
-    this._config = config;
+  public setConfig(config: IServerConfigs) {
+    this._config = cloneDeep(config);
     return this;
   }
 
@@ -18,10 +30,10 @@ export class ConfigService {
   }
 
   public getConfig() {
-    return cloneDeep(this._config);
+    return this._config;
   }
 
   public getEnv() {
-    return cloneDeep(this._env);
+    return this._env;
   }
 }

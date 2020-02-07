@@ -14,6 +14,14 @@ export interface IMenuGroup {
   items: IMenuItem[];
 }
 
+export interface IPreviewApiResult {
+  code: number;
+  data: {
+    source: string;
+    dependencies: Record<string, string>;
+  };
+}
+
 @Injectable()
 export class PortalService {
   public isCollapsed = false;
@@ -27,6 +35,11 @@ export class PortalService {
         {
           name: "Portal",
           link: "/portal",
+          selected: false,
+        },
+        {
+          name: "Preview",
+          link: "/portal/preview",
           selected: false,
         },
         {
@@ -44,6 +57,10 @@ export class PortalService {
 
   public fetchTemplates() {
     this.http.get("templates");
+  }
+
+  public createSource(configs: any) {
+    return this.http.post<IPreviewApiResult>("preview", { configs });
   }
 
   public async fetchUserInfos() {

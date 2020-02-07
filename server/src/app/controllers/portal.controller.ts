@@ -1,8 +1,8 @@
 import { Response as Resp } from "express";
 import { Controller, Get, Response } from "@nestjs/common";
-import { ConfigService } from "@global/services/config.service";
-import { UserService } from "@global/services/user.service";
-import { UseRolesAuthentication } from "@utils/roles";
+import { ConfigService } from "#global/services/config.service";
+import { UserService } from "#global/services/user.service";
+import { UseRolesAuthentication } from "#utils/roles";
 
 @Controller("portal")
 @UseRolesAuthentication({ roles: ["admin"] })
@@ -11,7 +11,7 @@ export class PortalController {
 
   @Get(["", "/*", "/**/*"])
   getIndex(@Response() resp: Resp) {
-    const config = this.configs.getConfig();
+    const config = this.configs.getConfig().uriGroup;
     if (config.portal.type === "redirect") {
       return resp.redirect(config.portal.uri);
     }

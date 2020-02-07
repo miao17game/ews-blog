@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "module": "commonjs",
+    "outDir": "websdk"
+  },
+  "include": ["server/src/core/index.websdk.ts"]
+}

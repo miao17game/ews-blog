@@ -22,23 +22,27 @@ function processQueries(queries: { [prop: string]: any } = {}) {
 export class HttpService {
   constructor(private client: HttpClient) {}
 
-  public get(url: string, queries: { [prop: string]: any } = {}, options: IHttpOptions = {}) {
+  public get<T = any>(url: string, queries: { [prop: string]: any } = {}, options: IHttpOptions = {}) {
     return this.client
-      .get(`${ENV.server.api}/${url}${processQueries(queries)}`, { withCredentials: true, ...options })
+      .get<T>(`${ENV.server.api}/${url}${processQueries(queries)}`, { withCredentials: true, ...options })
       .toPromise();
   }
 
-  public post(url: string, body: { [prop: string]: any } = {}, options: IHttpOptions = {}) {
-    return this.client.post(`${ENV.server.api}/${url}`, body, { withCredentials: true, ...options }).toPromise();
-  }
-
-  public put(url: string, body: { [prop: string]: any } = {}, options: IHttpOptions = {}) {
-    return this.client.put(`${ENV.server.api}/${url}`, body, { withCredentials: true, ...options }).toPromise();
-  }
-
-  public delete(url: string, queries: { [prop: string]: any } = {}, options: IHttpOptions = {}) {
+  public post<T = any>(url: string, body: { [prop: string]: any } = {}, options: IHttpOptions = {}) {
     return this.client
-      .delete(`${ENV.server.api}/${url}${processQueries(queries)}`, { withCredentials: true, ...options })
+      .post<T>(`${ENV.server.api}/${url}`, body, { withCredentials: true, ...options })
+      .toPromise();
+  }
+
+  public put<T = any>(url: string, body: { [prop: string]: any } = {}, options: IHttpOptions = {}) {
+    return this.client
+      .put<T>(`${ENV.server.api}/${url}`, body, { withCredentials: true, ...options })
+      .toPromise();
+  }
+
+  public delete<T = any>(url: string, queries: { [prop: string]: any } = {}, options: IHttpOptions = {}) {
+    return this.client
+      .delete<T>(`${ENV.server.api}/${url}${processQueries(queries)}`, { withCredentials: true, ...options })
       .toPromise();
   }
 }
