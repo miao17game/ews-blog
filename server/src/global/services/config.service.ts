@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { cloneDeep } from "lodash";
+import { CompressionOptions } from "compression";
 
 export interface IServerConfigs {
   name: string;
@@ -10,6 +11,7 @@ export interface IServerConfigs {
   };
   redis: { enabled: boolean; host: string; port: number };
   cluster: { enabled: boolean; maxCpuNum: number | null };
+  gzip: { enabled: boolean; options?: Partial<CompressionOptions> };
 }
 
 @Injectable()

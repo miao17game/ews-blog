@@ -20,3 +20,5 @@ configs:
   cluster:
     enabled: true
     maxCpuNum: null
+  gzip:
+    enabled: true
